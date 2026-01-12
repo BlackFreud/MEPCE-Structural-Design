@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Structural Design Suite</title>
     <style>
         :root {
@@ -15,19 +15,24 @@
             --border: #bdc3c7;
         }
 
+        * {
+            box-sizing: border-box; /* Crucial for responsive padding */
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f6f7;
             color: #333;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* HEADER DESIGN */
         header {
             background-color: var(--primary);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 1rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             border-bottom: 4px solid var(--accent);
         }
@@ -38,20 +43,35 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap; /* Allows stacking on mobile */
+            gap: 1rem;
         }
 
-        .app-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
-        .app-subtitle { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; }
+        .app-title { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
+        .app-subtitle { font-size: 0.8rem; opacity: 0.8; margin-top: 5px; }
 
         /* INFO CARD */
         .student-info {
             background-color: rgba(255,255,255,0.1);
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.2);
-            text-align: left;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            flex-shrink: 0;
         }
+        
+        /* Mobile adjustment for header */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .student-info {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+        }
+
         .info-label { color: #85c1e9; font-weight: bold; margin-right: 8px; }
         .info-val { font-weight: 600; color: white; text-transform: uppercase; }
 
@@ -63,6 +83,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         nav button {
             background: none;
@@ -74,58 +95,114 @@
             font-weight: 600;
             transition: 0.3s;
             border-bottom: 4px solid transparent;
+            white-space: nowrap;
         }
+        
+        /* Mobile Nav */
+        @media (max-width: 600px) {
+            nav button {
+                padding: 1rem 0.5rem;
+                font-size: 0.85rem;
+                flex: 1; /* Equal width buttons */
+            }
+        }
+
         nav button:hover { color: white; background-color: rgba(255,255,255,0.05); }
         nav button.active { color: white; border-bottom-color: var(--accent); background-color: rgba(0,0,0,0.1); }
 
         /* MAIN CONTENT */
-        main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; padding-bottom: 4rem; }
+        main { max-width: 900px; margin: 1.5rem auto; padding: 0 1rem; padding-bottom: 4rem; }
         
         .module {
             display: none;
             background: white;
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
             animation: fadeIn 0.4s ease-out;
         }
+        
+        /* Mobile Module Padding */
+        @media (max-width: 600px) {
+            .module { padding: 1.5rem 1rem; }
+        }
+
         .module.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { border-bottom: 2px solid var(--light); padding-bottom: 0.8rem; color: var(--primary); margin-top: 0; font-size: 1.6rem; }
-        h3 { color: var(--accent); margin-top: 2rem; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        h2 { 
+            border-bottom: 2px solid var(--light); 
+            padding-bottom: 0.8rem; 
+            color: var(--primary); 
+            margin-top: 0; 
+            font-size: 1.4rem; 
+        }
+        h3 { color: var(--accent); margin-top: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+        /* RESPONSIVE GRID */
+        .input-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 1.2rem; 
+            margin-bottom: 1.5rem; 
+        }
+        
+        /* On very small phones, stack inputs 1 per row */
+        @media (max-width: 480px) {
+            .input-grid { grid-template-columns: 1fr; gap: 1rem; }
+        }
+
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: #555; }
         .form-group input, .form-group select {
-            padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; background-color: #fafafa; transition: 0.2s;
+            padding: 12px; /* Larger touch target */
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            font-size: 16px; /* Prevents iOS zoom on focus */
+            background-color: #fafafa; 
+            transition: 0.2s;
+            width: 100%;
         }
         .form-group input:focus { border-color: var(--accent); background-color: white; outline: none; }
 
         .btn-calc {
             width: 100%; padding: 1.2rem; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none;
             border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 1rem; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3);
+            -webkit-tap-highlight-color: transparent;
         }
-        .btn-calc:hover { transform: translateY(-1px); box-shadow: 0 6px 8px rgba(41, 128, 185, 0.4); }
+        .btn-calc:active { transform: translateY(1px); }
 
         /* RESULTS BOX */
         .results-box {
-            margin-top: 2.5rem; background-color: #fff; border: 1px solid #e1e4e8; border-left: 5px solid var(--accent);
+            margin-top: 2rem; background-color: #fff; border: 1px solid #e1e4e8; border-left: 5px solid var(--accent);
             border-radius: 4px; padding: 0; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden; /* Contains children */
         }
         .result-header { background-color: #f8f9fa; padding: 1rem 1.5rem; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
         .result-body { padding: 1.5rem; }
-        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f1f1; }
+        
+        /* Mobile Result Body padding */
+        @media (max-width: 600px) {
+            .result-body { padding: 1rem; }
+        }
+
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f1f1; flex-wrap: wrap; gap: 5px; }
         .result-row:last-child { border-bottom: none; }
         .result-label { font-weight: 600; color: #555; }
         
-        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; color: white; text-transform: uppercase; }
+        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: white; text-transform: uppercase; white-space: nowrap; }
         .tag.pass { background-color: var(--success); }
         .tag.fail { background-color: var(--danger); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.95rem; }
-        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #eee; }
+        /* Table Scroll Wrapper */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 1rem;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 400px; /* Forces scroll on small screens */ }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; color: var(--primary); font-weight: 700; }
     </style>
 </head>
@@ -134,8 +211,8 @@
 <header>
     <div class="header-content">
         <div>
-            <div class="app-title">STRUCTURAL DESIGN PROGRAM</div>
-            <div class="app-subtitle">NSCP 2015 / ACI 318-14 COMPLIANT</div>
+            <div class="app-title">STRUCTURAL SUITE</div>
+            <div class="app-subtitle">NSCP 2015 / ACI 318-14</div>
         </div>
         <div class="student-info">
             <div><span class="info-label">Project:</span> <span id="display-project" class="info-val">...</span></div>
@@ -146,14 +223,14 @@
 </header>
 
 <nav>
-    <button class="active" onclick="switchTab('beam')">BEAM DESIGN</button>
-    <button onclick="switchTab('column')">COLUMN DESIGN</button>
-    <button onclick="switchTab('slab')">SLAB DESIGN</button>
+    <button class="active" onclick="switchTab('beam')">BEAM</button>
+    <button onclick="switchTab('column')">COLUMN</button>
+    <button onclick="switchTab('slab')">SLAB</button>
 </nav>
 
 <main>
     <section id="beam" class="module active">
-        <h2>Beam Design Module</h2>
+        <h2>Beam Design</h2>
         <h3>1. Geometry & Materials</h3>
         <div class="input-grid">
             <div class="form-group"><label>Width b (mm)</label><input type="number" id="b_b" value="300"></div>
@@ -189,7 +266,7 @@
     </section>
 
     <section id="column" class="module">
-        <h2>Column Design Module</h2>
+        <h2>Column Design</h2>
         <h3>1. Geometry</h3>
         <div class="input-grid">
             <div class="form-group"><label>Shape</label>
@@ -229,7 +306,7 @@
     </section>
 
     <section id="slab" class="module">
-        <h2>Slab Design Module</h2>
+        <h2>Slab Design</h2>
         <h3>1. Configuration</h3>
         <div class="form-group"><label>Design Method</label>
             <select id="s_mode" onchange="toggleSlabInputs()">
@@ -380,25 +457,19 @@
              if (Vu <= PhiVc) {
                  shearStat = "Min Stirrups Req";
                  shearTag = "SAFE";
-                 // For min stirrups, spacing is usually d/2 or 600
                  shearStat += ` (s = ${(d/2).toFixed(0)} mm)`;
              } else {
                 const Vs_req = (Vu/0.75) - Vc;
-                // Max Check
                 const Vc_limit = 0.66 * Math.sqrt(fc) * b * d / 1000;
                 
                 if (Vs_req > Vc_limit) {
                     shearStat = "SECTION TOO SMALL";
                     shearTag = "UNSAFE";
                 } else {
-                    // Stirrup Spacing Calculation (s = Av * fyt * d / Vs)
-                    const Av = 2 * (Math.PI * Math.pow(ds/2, 2)); // 2 legs
+                    const Av = 2 * (Math.PI * Math.pow(ds/2, 2)); 
                     const s_req = (Av * fyt * d) / (Vs_req * 1000);
-                    
-                    // Max Spacing Limit
                     let s_max = (Vs_req > 0.33 * Math.sqrt(fc) * b * d / 1000) ? d/4 : d/2;
                     s_max = Math.min(s_max, 600);
-                    
                     const s_final = Math.min(s_req, s_max);
                     shearStat = `Use ${ds}mm @ ${Math.floor(s_final)} mm`;
                     shearTag = "SAFE";
@@ -544,11 +615,11 @@
         }
 
         let html = `<div class="result-header">SLAB REINFORCEMENT (wu = ${wu.toFixed(2)} kPa)</div><div class="result-body">`;
-        html += `<table><thead><tr><th>Location</th><th>Mu (kNm)</th><th>Spacing</th><th>Remarks</th></tr></thead><tbody>`;
+        html += `<div class="table-wrapper"><table><thead><tr><th>Location</th><th>Mu (kNm)</th><th>Spacing</th><th>Remarks</th></tr></thead><tbody>`;
         results.forEach(r => {
             html += `<tr><td>${r.loc}</td><td>${r.mu.toFixed(2)}</td><td><b>${r.sp.toFixed(0)} mm</b></td><td>${r.rem}</td></tr>`;
         });
-        html += `</tbody></table></div>`;
+        html += `</tbody></table></div></div>`;
         const resBox = document.getElementById('slab-results');
         resBox.innerHTML = html;
         resBox.style.display = 'block';
