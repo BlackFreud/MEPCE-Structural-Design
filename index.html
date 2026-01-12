@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Structural Design Suite (UM Edition)</title>
+    <title>Structural Design Suite (Ultimate Edition)</title>
     <style>
         :root {
             /* UNIVERSITY OF MINDANAO PALETTE */
@@ -94,17 +94,17 @@
         
         .section-divider { background: #f9f9f9; color: var(--primary); padding: 8px 12px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-top: 1.5rem; border-radius: 4px; border-left: 4px solid var(--accent); }
 
-        /* CANVAS CHART */
+        /* CANVAS & VISUALS */
         .chart-container { 
             margin-top: 20px; 
             background: #fff; 
             border: 1px solid #eee; 
-            padding: 10px; 
+            padding: 15px; 
             border-radius: 4px;
             text-align: center;
         }
-        canvas { max-width: 100%; height: auto; }
-        .chart-legend { font-size: 0.8rem; margin-top: 5px; color: #666; display: flex; justify-content: center; gap: 15px; }
+        canvas { max-width: 100%; height: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .chart-legend { font-size: 0.8rem; margin-top: 5px; color: #666; display: flex; justify-content: center; gap: 15px; flex-wrap:wrap;}
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         
@@ -139,7 +139,6 @@
 <main>
     <section id="beam" class="module active">
         <h2>Beam Design Module</h2>
-        
         <div class="form-group" style="margin-bottom: 1.5rem;">
             <label>Design Type</label>
             <select id="b_type" onchange="toggleBeamType()">
@@ -147,7 +146,6 @@
                 <option value="doubly">Doubly Reinforced</option>
             </select>
         </div>
-
         <h3>1. Geometry & Materials</h3>
         <div class="input-grid">
             <div class="form-group"><label>Width b (mm)</label><input type="number" id="b_b" value="300"></div>
@@ -157,14 +155,12 @@
             <div class="form-group"><label>Main fy (MPa)</label><input type="number" id="b_fy" value="414"></div>
             <div class="form-group"><label>Stirrup fyt (MPa)</label><input type="number" id="b_fyt" value="275"></div>
         </div>
-
         <h3>2. Tension Reinforcement</h3>
         <div class="input-grid">
             <div class="form-group"><label>Tens. Bars (N)</label><input type="number" id="b_n" value="3"></div>
             <div class="form-group"><label>Bar Dia (mm)</label><input type="number" id="b_db" value="20"></div>
             <div class="form-group"><label>Stirrup Dia (mm)</label><input type="number" id="b_ds" value="10"></div>
         </div>
-
         <div id="beam-comp-group" style="display:none;">
             <h3>3. Compression Reinforcement</h3>
             <div class="input-grid">
@@ -173,7 +169,6 @@
                 <div class="form-group"><label>Dist to Top d' (mm)</label><input type="number" id="b_dp" value="65"></div>
             </div>
         </div>
-
         <h3>4. Loads & Span</h3>
         <div class="input-grid">
             <div class="form-group"><label>Moment Mu (kNm)</label><input type="number" id="b_Mu" value="150"></div>
@@ -316,6 +311,134 @@
         return `<div class="result-row"><span class="result-label">${label}</span><span>${val} ${status ? `<span class="tag ${tagClass}">${status}</span>` : ''}</span></div>`;
     }
 
+    // =========================================================================
+    //                          DRAWING FUNCTIONS (CANVAS)
+    // =========================================================================
+    function drawBeamSection(id, b, h, cc, n, np, db, ds) {
+        const c = document.getElementById(id);
+        if(!c) return;
+        const ctx = c.getContext('2d');
+        const w = c.width, ht = c.height;
+        ctx.clearRect(0,0,w,ht);
+        
+        // Scale
+        const padding = 40;
+        const scale = Math.min((w-2*padding)/b, (ht-2*padding)/h);
+        const rectW = b*scale;
+        const rectH = h*scale;
+        const x0 = (w - rectW)/2;
+        const y0 = (ht - rectH)/2;
+        
+        // Concrete
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fillRect(x0, y0, rectW, rectH);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0, y0, rectW, rectH);
+        
+        // Stirrup
+        const inset = cc * scale;
+        ctx.strokeStyle = '#2980b9';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0+inset, y0+inset, rectW-2*inset, rectH-2*inset);
+        
+        // Bars
+        const barRad = (db/2)*scale;
+        ctx.fillStyle = '#c0392b';
+        
+        // Bottom Bars
+        const yBot = y0 + rectH - inset - barRad;
+        const widthAvail = rectW - 2*inset - 2*barRad;
+        for(let i=0; i<n; i++) {
+            let cx = x0 + inset + barRad + (n>1 ? (i * widthAvail/(n-1)) : widthAvail/2);
+            ctx.beginPath(); ctx.arc(cx, yBot, barRad, 0, 2*Math.PI); ctx.fill();
+        }
+        
+        // Top Bars
+        if(np > 0) {
+            const yTop = y0 + inset + barRad;
+            for(let i=0; i<np; i++) {
+                let cx = x0 + inset + barRad + (np>1 ? (i * widthAvail/(np-1)) : widthAvail/2);
+                ctx.beginPath(); ctx.arc(cx, yTop, barRad, 0, 2*Math.PI); ctx.fill();
+            }
+        }
+        
+        // Labels
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`b=${b}mm`, w/2, y0-10);
+        ctx.fillText(`h=${h}mm`, x0-25, y0+rectH/2);
+    }
+
+    function drawColSection(id, shape, b, h, D, cc, n, db) {
+        const c = document.getElementById(id);
+        if(!c) return;
+        const ctx = c.getContext('2d');
+        const w = c.width, ht = c.height;
+        ctx.clearRect(0,0,w,ht);
+        
+        const padding = 40;
+        const dimX = shape=='rect' ? b : D;
+        const dimY = shape=='rect' ? h : D;
+        const scale = Math.min((w-2*padding)/dimX, (ht-2*padding)/dimY);
+        
+        const cx = w/2, cy = ht/2;
+        
+        ctx.fillStyle = '#e0e0e0';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        
+        if(shape === 'rect') {
+            const rw = b*scale, rh = h*scale;
+            ctx.fillRect(cx - rw/2, cy - rh/2, rw, rh);
+            ctx.strokeRect(cx - rw/2, cy - rh/2, rw, rh);
+            
+            // Tie
+            const inset = cc*scale;
+            ctx.strokeStyle = '#2980b9';
+            ctx.strokeRect(cx - rw/2 + inset, cy - rh/2 + inset, rw - 2*inset, rh - 2*inset);
+            
+            // Bars (Simplified perimeter distribution)
+            ctx.fillStyle = '#c0392b';
+            const barRad = (db/2)*scale;
+            // Draw 4 corners
+            const bx = rw/2 - inset - barRad;
+            const by = rh/2 - inset - barRad;
+            // Top/Bot
+            const nx = Math.ceil(n/4) + 1; // Approx
+            // Just drawing 4 corners + mid for visual
+            ctx.beginPath(); ctx.arc(cx-bx, cy-by, barRad, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx+bx, cy-by, barRad, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx+bx, cy+by, barRad, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx-bx, cy+by, barRad, 0, 2*Math.PI); ctx.fill();
+            // Text: N bars
+        } else {
+            const rad = (D*scale)/2;
+            ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+            
+            // Spiral
+            const inset = cc*scale;
+            ctx.beginPath(); ctx.arc(cx, cy, rad-inset, 0, 2*Math.PI); 
+            ctx.strokeStyle = '#2980b9'; ctx.stroke();
+            
+            // Bars
+            ctx.fillStyle = '#c0392b';
+            const barRad = (db/2)*scale;
+            const ringRad = rad - inset - barRad;
+            for(let i=0; i<n; i++) {
+                const ang = (i / n) * 2 * Math.PI;
+                const bx = cx + Math.cos(ang)*ringRad;
+                const by = cy + Math.sin(ang)*ringRad;
+                ctx.beginPath(); ctx.arc(bx, by, barRad, 0, 2*Math.PI); ctx.fill();
+            }
+        }
+    }
+
+    // =========================================================================
+    //                          CALCULATION LOGIC
+    // =========================================================================
+
     // --- BEAM CALCULATION ---
     function calculateBeam() {
         const b = parseFloat(document.getElementById('b_b').value);
@@ -349,6 +472,9 @@
 
         let html = `<div class="result-header">BEAM ANALYSIS: ${isDoubly ? 'DOUBLY' : 'SINGLY'} REINF.</div><div class="result-body">`;
 
+        // DIAGRAM
+        html += `<div class="chart-container"><canvas id="beamCanvas" width="250" height="200"></canvas><div style="font-size:0.8rem; margin-top:5px;">Schematic Section</div></div>`;
+
         // 1. Serviceability (Min Thickness Table 409.3.1.1)
         const denomMap = {1:16, 2:18.5, 3:21, 4:8};
         const denom = denomMap[supp] || 16;
@@ -369,11 +495,10 @@
             c = a / beta1;
             Mn = (As * fy * (d - a/2)) / 1e6;
         } else {
-            const Es = 200000;
             let c_trial = d / 3; 
             for(let i=0; i<50; i++) {
                 let es_prime = 0.003 * (c_trial - dp)/c_trial;
-                let fsp = Math.min(Math.max(es_prime * Es, -fy), fy);
+                let fsp = Math.min(Math.max(es_prime * 200000, -fy), fy);
                 let Cc = 0.85 * fc * beta1 * c_trial * b;
                 let Cs = Asp * (fsp - 0.85*fc);
                 let T = As * fy;
@@ -384,7 +509,7 @@
             c = c_trial;
             a = beta1 * c;
             let es_prime = 0.003 * (c - dp)/c;
-            fs_prime = Math.min(Math.max(es_prime * Es, -fy), fy);
+            fs_prime = Math.min(Math.max(es_prime * 200000, -fy), fy);
             let Cc = 0.85 * fc * a * b;
             let Cs = Asp * (fs_prime - 0.85*fc);
             Mn = (Cc*(d-a/2) + Cs*(d-dp)) / 1e6;
@@ -442,12 +567,16 @@
         html += `</div>`;
         document.getElementById('beam-results').innerHTML = html;
         document.getElementById('beam-results').style.display = 'block';
+        
+        // Draw
+        setTimeout(() => drawBeamSection('beamCanvas', b, h, cc, n, np, db, ds), 100);
     }
 
     // --- COLUMN CALCULATION & PLOTTING ---
     function calculateColumn() {
         const b = parseFloat(document.getElementById('c_b').value);
         const h = parseFloat(document.getElementById('c_h').value);
+        const D = parseFloat(document.getElementById('c_D').value);
         const fc = parseFloat(document.getElementById('c_fc').value);
         const fy = parseFloat(document.getElementById('c_fy').value);
         const nb = parseFloat(document.getElementById('c_nb').value);
@@ -457,21 +586,31 @@
         const Mu = parseFloat(document.getElementById('c_M2').value);
         const Lu = parseFloat(document.getElementById('c_Lu').value) * 1000;
         const sway = parseInt(document.getElementById('c_sway').value);
+        const shape = document.getElementById('c_shape').value;
+
+        const dim = shape=='rect' ? h : D;
 
         // 1. Basic Analysis
         let html = `<div class="result-header">COLUMN ANALYSIS</div><div class="result-body">`;
         
+        // Visual
+        html += `<div class="chart-container" style="display:flex; justify-content:space-around;">
+            <canvas id="colCanvas" width="100" height="100"></canvas>
+            <div><canvas id="pmChart" width="180" height="180"></canvas>
+            <div class="chart-legend"><span class="dot" style="background:#27ae60"></span> Cap <span class="dot" style="background:#c0392b"></span> Load</div></div>
+        </div>`;
+
         // Slenderness
-        const r = 0.3 * h;
+        const r = 0.3 * dim;
         const klr = (1.0 * Lu) / r;
         const limit = sway ? 22.0 : 34.0;
         const isSlender = klr > limit;
         html += createRow("Slenderness Ratio", klr.toFixed(2), isSlender ? "SLENDER" : "SHORT");
 
         // Magnification (Simplified)
-        let Mc = Math.max(Math.abs(Mu), Pu*(15 + 0.03*h)/1000);
+        let Mc = Math.max(Math.abs(Mu), Pu*(15 + 0.03*dim)/1000);
         if(isSlender && !sway) {
-            let EI = 0.4 * 4700 * Math.sqrt(fc) * (b*Math.pow(h,3)/12);
+            let EI = 0.4 * 4700 * Math.sqrt(fc) * (shape=='rect' ? (b*Math.pow(h,3)/12) : (Math.PI*Math.pow(D,4)/64));
             let Pc = (Math.pow(Math.PI,2)*EI) / Math.pow(Lu,2) / 1000;
             let delta = 1.0 / (1 - Pu/(0.75*Pc));
             delta = Math.max(delta, 1.0);
@@ -482,23 +621,24 @@
 
         // Confinement
         html += `<div class="section-divider">CONFINEMENT (ZONE 4)</div>`;
-        const so = Math.min(Math.min(b,h)/4, 6*db, 150);
+        const so = Math.min(shape=='rect'?Math.min(b,h)/4:D/4, 6*db, 150);
         html += createRow("Confine Zone (Lo)", `${dt}mm @ ${Math.floor(so)}mm`, "");
 
         // 2. Interaction Diagram Data Generation
-        const d = h - 40 - 10 - db/2; // d approx
+        const d = dim - 40 - 10 - db/2; // d approx
         const d_prime = 40 + 10 + db/2;
         const As_total = nb * Math.PI * Math.pow(db/2, 2);
         const As_face = As_total / 2; // Assume 2 faces for calculation
         const beta1 = fc <= 28 ? 0.85 : 0.65; // Simplified beta
 
         let points = [];
-        let c_vals = [h*2, h, h*0.8, h*0.6, h*0.4, h*0.2, h*0.1, 0];
+        let c_vals = [dim*2, dim, dim*0.8, dim*0.6, dim*0.4, dim*0.2, dim*0.1, 0];
+        const area = shape=='rect' ? b*h : Math.PI*D*D/4;
         
         c_vals.forEach(c => {
             let Pn, Mn, phi;
-            if(c >= h*1.5) { // Pure Comp
-                Pn = 0.80 * (0.85*fc*(b*h - As_total) + As_total*fy); // Tied
+            if(c >= dim*1.5) { // Pure Comp
+                Pn = 0.80 * (0.85*fc*(area - As_total) + As_total*fy); // Tied
                 Mn = 0;
                 phi = 0.65;
             } else if (c <= 0.01) { // Pure Tension
@@ -507,7 +647,7 @@
                 phi = 0.90;
             } else {
                 let a = beta1 * c;
-                let Cc = 0.85 * fc * a * b;
+                let Cc = shape=='rect' ? 0.85 * fc * a * b : 0.85*fc*area*0.7; // Circle approx
                 let es_s = 0.003 * (d - c)/c;
                 let es_p = 0.003 * (c - d_prime)/c;
                 let fs_s = Math.min(Math.max(es_s * 200000, -fy), fy);
@@ -517,7 +657,7 @@
                 let F_ts = As_face * fs_s * -1; 
                 
                 Pn = Cc + F_cs + F_ts;
-                Mn = Cc*(h/2 - a/2) + F_cs*(h/2 - d_prime) - F_ts*(d - h/2);
+                Mn = Cc*(dim/2 - a/2) + F_cs*(dim/2 - d_prime) - F_ts*(d - dim/2);
                 
                 let et = 0.003 * (d-c)/c;
                 if(et <= 0.002) phi = 0.65;
@@ -527,23 +667,18 @@
             points.push({x: Math.abs(Mn*phi/1e6), y: Pn*phi/1000});
         });
 
-        html += `<div class="chart-container">
-            <canvas id="pmChart" width="300" height="300"></canvas>
-            <div class="chart-legend">
-                <div class="legend-item"><span class="dot" style="background:#27ae60"></span> Capacity</div>
-                <div class="legend-item"><span class="dot" style="background:#c0392b"></span> Your Load</div>
-            </div>
-        </div>`;
         html += `</div>`;
         document.getElementById('col-results').innerHTML = html;
         document.getElementById('col-results').style.display = 'block';
 
         drawInteractionDiagram(points, Mc, Pu);
+        drawColSection('colCanvas', shape, b, h, D, 40, nb, db);
     }
 
     function drawInteractionDiagram(points, Mu, Pu) {
-        const ctx = document.getElementById('pmChart').getContext('2d');
-        const w = 300, h = 300;
+        const c = document.getElementById('pmChart');
+        const ctx = c.getContext('2d');
+        const w = c.width, h = c.height;
         ctx.clearRect(0,0,w,h);
         
         const maxY = Math.max(...points.map(p => p.y)) * 1.2;
@@ -551,35 +686,29 @@
         
         // Axis
         ctx.beginPath();
-        ctx.moveTo(40, 20); ctx.lineTo(40, 260); // Y
-        ctx.lineTo(280, 260); // X
+        ctx.moveTo(30, 10); ctx.lineTo(30, h-20); // Y
+        ctx.lineTo(w-10, h-20); // X
         ctx.strokeStyle = '#333';
         ctx.stroke();
         
         // Curve
         ctx.beginPath();
         points.forEach((p, i) => {
-            let px = 40 + (p.x / maxX) * 240;
-            let py = 260 - (p.y / maxY) * 240;
+            let px = 30 + (p.x / maxX) * (w-40);
+            let py = (h-20) - (p.y / maxY) * (h-30);
             if(i==0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         });
         ctx.strokeStyle = '#27ae60';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.stroke();
         
         // Point
-        let dx = 40 + (Math.abs(Mu) / maxX) * 240;
-        let dy = 260 - (Pu / maxY) * 240;
+        let dx = 30 + (Math.abs(Mu) / maxX) * (w-40);
+        let dy = (h-20) - (Pu / maxY) * (h-30);
         ctx.beginPath();
-        ctx.arc(dx, dy, 5, 0, 2*Math.PI);
+        ctx.arc(dx, dy, 4, 0, 2*Math.PI);
         ctx.fillStyle = '#c0392b';
         ctx.fill();
-        
-        // Labels
-        ctx.font = '10px Arial';
-        ctx.fillStyle = '#666';
-        ctx.fillText("Axial (kN)", 10, 15);
-        ctx.fillText("Moment (kNm)", 220, 275);
     }
 
     // --- SLAB CALCULATION ---
