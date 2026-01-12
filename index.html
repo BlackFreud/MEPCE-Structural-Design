@@ -3,69 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Structural Design Suite</title>
+    <title>Structural Design</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #2980b9;
-            --light: #ecf0f1;
+            /* UNIVERSITY OF MINDANAO PALETTE (Approx) */
+            --primary: #800000;   /* UM Maroon */
+            --primary-dark: #580000;
+            --accent: #FFD700;    /* UM Gold */
+            --accent-dark: #D4AF37;
+            
+            --secondary: #333333; /* Dark Gray for secondary nav */
+            --light: #f4f6f7;
             --success: #27ae60;
             --danger: #c0392b;
-            --border: #bdc3c7;
+            --warning: #f39c12;
+            --border: #dcdcdc;
         }
+
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f6f7; color: #333; }
         
-        /* HEADER & LAYOUT */
-        header { background-color: var(--primary); color: white; padding: 1rem; border-bottom: 4px solid var(--accent); }
-        .header-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        .app-title { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
-        .app-subtitle { font-size: 0.8rem; opacity: 0.8; margin-top: 5px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--light); 
+            color: #333;
+            -webkit-font-smoothing: antialiased;
+        }
         
-        .student-info { background-color: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; }
-        .info-label { color: #85c1e9; font-weight: bold; margin-right: 8px; }
-        .info-val { font-weight: 600; color: white; text-transform: uppercase; }
+        /* HEADER DESIGN */
+        header { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white; 
+            padding: 1.5rem 2rem; 
+            border-bottom: 5px solid var(--accent); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
 
-        nav { background-color: var(--secondary); display: flex; justify-content: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 1rem 2rem; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.3s; border-bottom: 4px solid transparent; }
-        nav button.active { color: white; border-bottom-color: var(--accent); background-color: rgba(0,0,0,0.1); }
-        @media (max-width: 600px) { nav button { padding: 1rem 0.5rem; font-size: 0.85rem; flex: 1; } }
+        .header-content { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 1.5rem; 
+        }
 
-        main { max-width: 900px; margin: 1.5rem auto; padding: 0 1rem; padding-bottom: 4rem; }
-        .module { display: none; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); animation: fadeIn 0.4s ease-out; }
+        .app-title { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+        }
+        
+        .app-subtitle { 
+            font-size: 0.85rem; 
+            opacity: 0.9; 
+            margin-top: 5px; 
+            color: var(--accent); /* Gold subtitle */
+            font-weight: 600;
+        }
+        
+        /* REFINED STUDENT INFO CARD */
+        .student-info { 
+            background-color: rgba(0, 0, 0, 0.25); 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-size: 0.9rem;
+            border-left: 4px solid var(--accent);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .info-row:last-child { margin-bottom: 0; }
+
+        .info-label { 
+            color: var(--accent); 
+            font-weight: 700; 
+            margin-right: 10px; 
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            width: 70px; /* Fixed width for alignment */
+        }
+        
+        .info-val { 
+            font-weight: 600; 
+            color: white; 
+            letter-spacing: 0.5px;
+        }
+
+        /* NAVIGATION */
+        nav { 
+            background-color: var(--secondary); 
+            display: flex; 
+            justify-content: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+        
+        nav button { 
+            background: none; 
+            border: none; 
+            color: rgba(255,255,255,0.7); 
+            padding: 1rem 2.5rem; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 700; 
+            transition: all 0.3s; 
+            border-bottom: 4px solid transparent; 
+            text-transform: uppercase;
+        }
+        
+        nav button:hover { 
+            color: var(--accent); 
+            background-color: rgba(255,255,255,0.05); 
+        }
+        
+        nav button.active { 
+            color: white; 
+            border-bottom-color: var(--accent); 
+            background-color: rgba(255,255,255,0.1); 
+        }
+        
+        @media (max-width: 600px) { 
+            nav button { padding: 1rem 0.5rem; font-size: 0.8rem; flex: 1; } 
+            .header-content { justify-content: center; text-align: center; }
+            .student-info { width: 100%; text-align: left; }
+        }
+
+        /* CONTENT */
+        main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; padding-bottom: 4rem; }
+        
+        .module { 
+            display: none; 
+            background: white; 
+            padding: 2.5rem; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            animation: fadeIn 0.4s ease-out; 
+            border-top: 4px solid var(--primary);
+        }
+        
         .module.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { border-bottom: 2px solid var(--light); padding-bottom: 0.8rem; color: var(--primary); margin-top: 0; font-size: 1.4rem; }
-        h3 { color: var(--accent); margin-top: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        h2 { 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 0.8rem; 
+            color: var(--primary); 
+            margin-top: 0; 
+            font-size: 1.5rem; 
+            font-weight: 700;
+        }
+        
+        h3 { 
+            color: #555; 
+            margin-top: 2rem; 
+            font-size: 1rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
+        }
 
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
         @media (max-width: 480px) { .input-grid { grid-template-columns: 1fr; gap: 1rem; } }
 
         .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: #555; }
-        .form-group input, .form-group select { padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 16px; background-color: #fafafa; width: 100%; }
-        .form-group input:focus { border-color: var(--accent); background-color: white; outline: none; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: #666; }
+        .form-group input, .form-group select { 
+            padding: 12px; 
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            font-size: 1rem; 
+            background-color: #fff; 
+            width: 100%; 
+            transition: border 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1); 
+            outline: none; 
+        }
 
-        .btn-calc { width: 100%; padding: 1.2rem; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 1rem; }
+        /* BUTTONS */
+        .btn-calc { 
+            width: 100%; 
+            padding: 1.2rem; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            margin-top: 1.5rem; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .btn-calc:hover { 
+            background-color: var(--primary-dark); 
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
         .btn-calc:active { transform: translateY(1px); }
 
-        .results-box { margin-top: 2rem; background-color: #fff; border: 1px solid #e1e4e8; border-left: 5px solid var(--accent); border-radius: 4px; display: none; overflow: hidden; }
-        .result-header { background-color: #f8f9fa; padding: 1rem 1.5rem; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .result-body { padding: 1.5rem; }
-        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f1f1; flex-wrap: wrap; gap: 5px; }
-        .result-row:last-child { border-bottom: none; }
-        .result-label { font-weight: 600; color: #555; }
+        /* RESULTS BOX */
+        .results-box { 
+            margin-top: 2.5rem; 
+            background-color: #fff; 
+            border: 1px solid #ddd; 
+            border-left: 6px solid var(--primary); 
+            border-radius: 6px; 
+            display: none; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
         
-        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: white; text-transform: uppercase; }
+        .result-header { 
+            background-color: var(--primary); 
+            color: white;
+            padding: 1rem 1.5rem; 
+            font-weight: bold; 
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-body { padding: 1.5rem; }
+        
+        .result-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0.9rem 0; 
+            border-bottom: 1px solid #f0f0f0; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .result-row:last-child { border-bottom: none; }
+        
+        .result-label { font-weight: 600; color: #444; }
+        
+        .tag { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
         .tag.pass { background-color: var(--success); }
         .tag.fail { background-color: var(--danger); }
+        .tag.warn { background-color: var(--warning); }
+        .tag.info { background-color: var(--primary); }
         
+        .section-divider {
+            background: #f9f9f9; color: var(--primary); padding: 8px 12px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-top: 1.5rem; border-radius: 4px; border-left: 4px solid var(--accent);
+        }
+
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1rem; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 400px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: var(--primary); font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 500px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f8f8; color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; }
+        tr:hover { background-color: #fcfcfc; }
     </style>
 </head>
 <body>
@@ -73,13 +278,14 @@
 <header>
     <div class="header-content">
         <div>
-            <div class="app-title">STRUCTURAL SUITE</div>
-            <div class="app-subtitle">NSCP 2015 / ACI 318-14</div>
+            <div class="app-title">STRUCTURAL DESIGN CALCULATOR</div>
+            <div class="app-subtitle">NSCP 2015 / ACI 318-14 (ZONE 4 READY)</div>
         </div>
+        
         <div class="student-info">
-            <div><span class="info-label">Project:</span> <span id="display-project" class="info-val">...</span></div>
-            <div><span class="info-label">Name:</span> <span id="display-name" class="info-val">...</span></div>
-            <div><span class="info-label">Subject:</span> <span id="display-subject" class="info-val">...</span></div>
+            <div class="info-row"><span class="info-label">Project</span> <span id="display-project" class="info-val">...</span></div>
+            <div class="info-row"><span class="info-label">Name</span> <span id="display-name" class="info-val">...</span></div>
+            <div class="info-row"><span class="info-label">Subject</span> <span id="display-subject" class="info-val">...</span></div>
         </div>
     </div>
 </header>
@@ -104,15 +310,15 @@
             <div class="form-group"><label>Stirrup fyt (MPa)</label><input type="number" id="b_fyt" value="275"></div>
         </div>
 
-        <h3>2. Tension Reinforcement (Bottom)</h3>
+        <h3>2. Tension Reinforcement</h3>
         <div class="input-grid">
             <div class="form-group"><label>No. of Bars (N)</label><input type="number" id="b_n" value="3"></div>
             <div class="form-group"><label>Bar Dia (mm)</label><input type="number" id="b_db" value="20"></div>
             <div class="form-group"><label>Stirrup Dia (mm)</label><input type="number" id="b_ds" value="10"></div>
         </div>
 
-        <h3>3. Compression Reinforcement (Top)</h3>
-        <p style="font-size:0.8rem; color:#666; margin-top:-10px;">*Leave as 0 for Singly Reinforced</p>
+        <h3>3. Compression Reinforcement</h3>
+        <p style="font-size:0.8rem; color:#666; margin-top:-10px; font-style:italic;">*Set to 0 for Singly Reinforced Analysis</p>
         <div class="input-grid">
             <div class="form-group"><label>No. Comp. Bars (N')</label><input type="number" id="b_np" value="0"></div>
             <div class="form-group"><label>Comp. Bar Dia (mm)</label><input type="number" id="b_dbp" value="20"></div>
@@ -134,7 +340,7 @@
                 </select>
             </div>
         </div>
-        <button class="btn-calc" onclick="calculateBeam()">RUN ANALYSIS</button>
+        <button class="btn-calc" onclick="calculateBeam()">ANALYZE BEAM</button>
         <div id="beam-results" class="results-box"></div>
     </section>
 
@@ -162,6 +368,7 @@
             <div class="form-group"><label>Tie Type</label>
                 <select id="c_tie"><option value="tied">Tied</option><option value="spiral">Spiral</option></select>
             </div>
+            <div class="form-group"><label>Tie Dia (mm)</label><input type="number" id="c_dt" value="10"></div>
         </div>
         <h3>3. Loads & Slenderness</h3>
         <div class="input-grid">
@@ -174,7 +381,7 @@
                 <select id="c_sway"><option value="0">Non-Sway</option><option value="1">Sway</option></select>
             </div>
         </div>
-        <button class="btn-calc" onclick="calculateColumn()">RUN ANALYSIS</button>
+        <button class="btn-calc" onclick="calculateColumn()">ANALYZE COLUMN</button>
         <div id="col-results" class="results-box"></div>
     </section>
 
@@ -197,6 +404,7 @@
             <div class="form-group"><label>Superimposed DL (kPa)</label><input type="number" id="s_DL" value="1.5"></div>
             <div class="form-group"><label>Live Load (kPa)</label><input type="number" id="s_LL" value="1.9"></div>
         </div>
+        
         <div id="slab-oneway">
             <h3>3. One-Way Parameters</h3>
             <div class="input-grid">
@@ -211,10 +419,12 @@
                 </div>
             </div>
         </div>
+        
         <div id="slab-twoway" style="display:none;">
             <h3>3. Two-Way Parameters</h3>
             <div class="input-grid">
                 <div class="form-group"><label>Short Span Lx (m)</label><input type="number" id="s_Lx" value="3.0"></div>
+                <div class="form-group"><label>Column D (mm) [Punching]</label><input type="number" id="s_col_w" value="400"></div>
             </div>
             <h4>Moment Coefficients (Table)</h4>
             <div class="input-grid">
@@ -224,14 +434,14 @@
                 <div class="form-group"><label>Long Span Pos (+)</label><input type="number" id="s_cp_l" value="0.05"></div>
             </div>
         </div>
-        <button class="btn-calc" onclick="calculateSlab()">RUN ANALYSIS</button>
+        <button class="btn-calc" onclick="calculateSlab()">ANALYZE SLAB</button>
         <div id="slab-results" class="results-box"></div>
     </section>
 </main>
 
 <script>
     // ==========================================
-    //       USER CONFIGURATION
+    //       USER CONFIGURATION (EDIT HERE)
     // ==========================================
     const PROJECT_DETAILS = {
         project: "FINAL PROPOSAL",       
@@ -268,8 +478,8 @@
 
     function createRow(label, val, status) {
         let tagClass = 'info';
-        if(['PASS','SAFE','DUCTILE','SHORT'].includes(status)) tagClass = 'pass';
-        if(['FAIL','UNSAFE','SLENDER','TRANSITION'].includes(status)) tagClass = 'fail';
+        if(['PASS','SAFE','DUCTILE','SHORT','YIELD'].includes(status)) tagClass = 'pass';
+        if(['FAIL','UNSAFE','SLENDER','TRANSITION','ELASTIC'].includes(status)) tagClass = 'fail';
         return `
         <div class="result-row">
             <span class="result-label">${label}</span>
@@ -277,9 +487,8 @@
         </div>`;
     }
 
-    // --- BEAM CALCULATION LOGIC ---
+    // --- BEAM CALCULATION ---
     function calculateBeam() {
-        // Geometric Inputs
         const b = parseFloat(document.getElementById('b_b').value);
         const h = parseFloat(document.getElementById('b_h').value);
         const cc = parseFloat(document.getElementById('b_cc').value);
@@ -288,18 +497,12 @@
         const fyt = parseFloat(document.getElementById('b_fyt').value);
         const L = parseFloat(document.getElementById('b_L').value);
         const supp = parseInt(document.getElementById('b_supp').value);
-        
-        // Tension Steel
         const db = parseFloat(document.getElementById('b_db').value);
         const n = parseFloat(document.getElementById('b_n').value);
         const ds = parseFloat(document.getElementById('b_ds').value);
-        
-        // Compression Steel
         const np = parseFloat(document.getElementById('b_np').value);
         const dbp = parseFloat(document.getElementById('b_dbp').value);
-        const dp = parseFloat(document.getElementById('b_dp').value); // d'
-
-        // Loads
+        const dp = parseFloat(document.getElementById('b_dp').value);
         const Mu = parseFloat(document.getElementById('b_Mu').value);
         const Vu = parseFloat(document.getElementById('b_Vu').value);
         const Tu = parseFloat(document.getElementById('b_Tu').value);
@@ -309,13 +512,9 @@
         let Asp = 0;
         let isDoubly = false;
 
-        // Doubly Logic
-        if (np > 0) {
-            isDoubly = true;
-            Asp = np * Math.PI * Math.pow(dbp/2, 2);
-        }
+        if (np > 0) { isDoubly = true; Asp = np * Math.PI * Math.pow(dbp/2, 2); }
 
-        let html = `<div class="result-header">BEAM ANALYSIS: ${isDoubly ? 'DOUBLY REINFORCED' : 'SINGLY REINFORCED'}</div><div class="result-body">`;
+        let html = `<div class="result-header">BEAM ANALYSIS RESULTS (${isDoubly ? 'DOUBLY' : 'SINGLY'})</div><div class="result-body">`;
 
         // 1. Serviceability
         const denom = {1:16, 2:18.5, 3:21, 4:8}[supp] || 16;
@@ -323,57 +522,39 @@
         const h_min = (L * 1000) / denom * mod;
         html += createRow("Min Thickness Req", h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
 
-        // 2. Flexural Analysis
+        // 2. Development Length
+        let ld_factor = (db >= 20) ? 50 : 40; 
+        const ld_calc = (fy / (1.1 * Math.sqrt(fc))) * db; 
+        html += createRow("Dev. Length (Ld)", ld_calc.toFixed(0) + " mm", "");
+
+        // 3. Flexural Analysis
         let beta1 = fc <= 28 ? 0.85 : Math.max(0.65, 0.85 - 0.05*(fc-28)/7);
         let c, a, Mn, et, phi, fs_prime;
         
         if (!isDoubly) {
-            // Singly Logic
             a = (As * fy) / (0.85 * fc * b);
             c = a / beta1;
             Mn = (As * fy * (d - a/2)) / 1e6;
         } else {
-            // Doubly Logic (Elastic-Plastic Iteration or Quadratic)
-            // Simplified Quadratic for fs' < fy, assuming Cc + Cs = T
-            // 0.85fc*beta1*c*b + Asp*Es*(c-d')/c - As*fy = 0
-            // Rearrange to Ac^2 + Bc + C = 0
             const Es = 200000;
-            const A_quad = 0.85 * fc * beta1 * b;
-            const B_quad = Asp * Es * 0.003 - As * fy; // Approximate fs' based on strain
-            // Wait, standard way: Check if fs' yields.
-            
-            // Let's assume fs' yields first (fs' = fy - 0.85fc) -> Approximate
-            // For a rapid tool, we check if As - As' balances.
-            // Let's do the rigorous check for fs'
-            // c = (As*fy - Asp*fs') / (0.85*fc*beta1*b) -> Circular dependency
-            
-            // Simplified Iteration to find c
             let c_trial = d / 3; 
             for(let i=0; i<50; i++) {
                 let es_prime = 0.003 * (c_trial - dp)/c_trial;
-                let fsp = Math.min(Math.max(es_prime * Es, -fy), fy); // Clamp to fy
+                let fsp = Math.min(Math.max(es_prime * Es, -fy), fy);
                 let Cc = 0.85 * fc * beta1 * c_trial * b;
-                let Cs = Asp * (fsp - 0.85*fc); // Displaced concrete
+                let Cs = Asp * (fsp - 0.85*fc);
                 let T = As * fy;
-                
                 let residual = Cc + Cs - T;
-                if(Math.abs(residual) < 100) break; // Converged
-                c_trial = c_trial - residual / (0.85*fc*beta1*b); // Newton step approx
+                if(Math.abs(residual) < 100) break;
+                c_trial = c_trial - residual / (0.85*fc*beta1*b);
             }
             c = c_trial;
             a = beta1 * c;
-            
             let es_prime = 0.003 * (c - dp)/c;
             fs_prime = Math.min(Math.max(es_prime * Es, -fy), fy);
-            
-            // Moment Capacity
             let Cc = 0.85 * fc * a * b;
             let Cs = Asp * (fs_prime - 0.85*fc);
-            
-            let Mn_conc = Cc * (d - a/2);
-            let Mn_steel = Cs * (d - dp);
-            Mn = (Mn_conc + Mn_steel) / 1e6;
-            
+            Mn = (Cc * (d - a/2) + Cs * (d - dp)) / 1e6;
             html += createRow("Comp. Steel Stress", fs_prime.toFixed(1) + " MPa", fs_prime >= fy ? "YIELD" : "ELASTIC");
         }
 
@@ -381,55 +562,51 @@
         phi = 0.90;
         if(et <= 0.002) phi = 0.65;
         else if(et < 0.005) phi = 0.65 + (et - 0.002)*(250/3);
-        
         const PhiMn = phi * Mn;
         
         html += createRow("Tensile Strain", et.toFixed(4), et >= 0.005 ? "DUCTILE" : "TRANSITION");
         html += createRow("Flexural Capacity", PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
 
-        // 3. Shear
+        // 4. Shear & Detailing
+        html += `<div class="section-divider">SHEAR & SEISMIC DETAILING</div>`;
         const Vc = 0.17 * 1.0 * Math.sqrt(fc) * b * d / 1000;
         const PhiVc = 0.75 * Vc;
         let shearStat = "OK (No Reinf)";
-        let shearTag = "SAFE";
         
         if(Vu > 0.5 * PhiVc) {
              if (Vu <= PhiVc) {
-                 shearStat = "Min Stirrups Req";
-                 shearStat += ` (s = ${(d/2).toFixed(0)} mm)`;
+                 shearStat = `Min Stirrups @ ${(d/2).toFixed(0)}mm`;
              } else {
                 const Vs_req = (Vu/0.75) - Vc;
                 const Vc_limit = 0.66 * Math.sqrt(fc) * b * d / 1000;
-                
                 if (Vs_req > Vc_limit) {
-                    shearStat = "SECTION TOO SMALL";
-                    shearTag = "UNSAFE";
+                    shearStat = "FAIL: SEC TOO SMALL";
                 } else {
                     const Av = 2 * (Math.PI * Math.pow(ds/2, 2)); 
                     const s_req = (Av * fyt * d) / (Vs_req * 1000);
                     let s_max = (Vs_req > 0.33 * Math.sqrt(fc) * b * d / 1000) ? d/4 : d/2;
                     s_max = Math.min(s_max, 600);
                     const s_final = Math.min(s_req, s_max);
-                    shearStat = `Use ${ds}mm @ ${Math.floor(s_final)} mm`;
+                    shearStat = `Use ${ds}mm @ ${Math.floor(s_final)}mm`;
                 }
              }
         }
-        
         html += createRow("Shear Capacity (Phi Vc)", PhiVc.toFixed(2) + " kN", "");
-        html += createRow("Shear Design", shearStat, shearTag);
+        html += createRow("Shear Design", shearStat, "");
 
-        // 4. Torsion
+        // Seismic Hoops
+        const s_seismic = Math.min(d/4, 8*db, 24*ds, 300);
+        html += createRow("Seismic Hoops (Zone 4)", `${ds}mm @ ${Math.floor(s_seismic)}mm`, "");
+
         if(Tu > 0) {
-            const Acp = b*h;
-            const Pcp = 2*(b+h);
+            const Acp = b*h; const Pcp = 2*(b+h);
             const Tth = 0.75 * 0.083 * Math.sqrt(fc) * (Math.pow(Acp, 2)/Pcp) / 1e6;
-            html += createRow("Threshold Torsion", Tth.toFixed(2) + " kNm", Tu < Tth ? "IGNORE" : "DESIGN REQ");
+            html += createRow("Torsion Check", Tth.toFixed(2) + " kNm", Tu < Tth ? "IGNORE" : "DESIGN REQ");
         }
         
         html += `</div>`;
-        const resBox = document.getElementById('beam-results');
-        resBox.innerHTML = html;
-        resBox.style.display = 'block';
+        document.getElementById('beam-results').innerHTML = html;
+        document.getElementById('beam-results').style.display = 'block';
     }
 
     // --- COLUMN CALCULATION ---
@@ -443,6 +620,7 @@
         const nb = parseFloat(document.getElementById('c_nb').value);
         const db = parseFloat(document.getElementById('c_db').value);
         const tie = document.getElementById('c_tie').value;
+        const dt = parseFloat(document.getElementById('c_dt').value);
         const Pu = parseFloat(document.getElementById('c_Pu').value);
         const M2 = parseFloat(document.getElementById('c_M2').value);
         const M1 = parseFloat(document.getElementById('c_M1').value);
@@ -455,6 +633,7 @@
         const Ag = shape === 'rect' ? b*h : (Math.PI * D**2)/4;
         let html = `<div class="result-header">COLUMN ANALYSIS RESULTS</div><div class="result-body">`;
 
+        // Slenderness
         const r = shape === 'rect' ? 0.3 * h : 0.25 * h;
         const klr = (k * Lu) / r;
         let limit = 22.0;
@@ -462,11 +641,11 @@
             const ratio = M2 !== 0 ? M1/M2 : 1.0;
             limit = Math.max(34 - 12*ratio, 40);
         }
-        const isSlender = klr > limit;
-        html += createRow("Slenderness Ratio (kL/r)", klr.toFixed(2), isSlender ? "SLENDER" : "SHORT");
+        html += createRow("Slenderness Ratio (kL/r)", klr.toFixed(2), klr > limit ? "SLENDER" : "SHORT");
 
+        // Magnification
         let Mc = Math.max(Math.abs(M2), Pu*(15 + 0.03*h)/1000);
-        if(isSlender && sway === 0) {
+        if(klr > limit && sway === 0) {
             const Ec = 4700 * Math.sqrt(fc);
             const Ig = shape === 'rect' ? (width * Math.pow(h,3))/12 : (Math.PI * Math.pow(D,4))/64;
             const EI = (0.4 * Ec * Ig); 
@@ -479,16 +658,33 @@
         }
         html += createRow("Design Moment (Mc)", Mc.toFixed(2) + " kNm", "");
 
+        // Capacity
         const Ast = nb * Math.PI * Math.pow(db/2, 2);
         const phi_ax = tie === 'spiral' ? 0.75 : 0.65;
         const alpha = tie === 'spiral' ? 0.85 : 0.80;
         const Pn_max = alpha * (0.85*fc*(Ag-Ast) + Ast*fy) / 1000;
         const PhiPn = phi_ax * Pn_max;
         html += createRow("Max Axial Cap (Phi Pn)", PhiPn.toFixed(0) + " kN", PhiPn >= Pu ? "SAFE" : "UNSAFE");
+
+        // Tie Spacing (Confiment)
+        html += `<div class="section-divider">LATERAL TIES (CONFINEMENT)</div>`;
+        const dim_min = shape === 'rect' ? Math.min(b,h) : D;
+        
+        // 1. Vertical Spacing (Non-Seismic)
+        const s1 = 16 * db;
+        const s2 = 48 * dt;
+        const s3 = dim_min;
+        const s_vert = Math.min(s1, s2, s3);
+        
+        // 2. Confinement Zone (Lo) - SMRF
+        const s_conf = Math.min(dim_min/4, 6*db, 150); // Zone 4 tight spacing
+        
+        html += createRow("Mid-Height Spacing", `${dt}mm @ ${Math.floor(s_vert)}mm`, "");
+        html += createRow("Confine Zone (Top/Bot)", `${dt}mm @ ${Math.floor(s_conf)}mm`, "");
+
         html += `</div>`;
-        const resBox = document.getElementById('col-results');
-        resBox.innerHTML = html;
-        resBox.style.display = 'block';
+        document.getElementById('col-results').innerHTML = html;
+        document.getElementById('col-results').style.display = 'block';
     }
 
     // --- SLAB CALCULATION ---
@@ -531,6 +727,8 @@
             };
         };
 
+        let html = `<div class="result-header">SLAB ANALYSIS (wu = ${wu.toFixed(2)} kPa)</div><div class="result-body">`;
+
         if(mode === '1') {
             const L = parseFloat(document.getElementById('s_L').value);
             const coeff = parseFloat(document.getElementById('s_supp').value);
@@ -539,6 +737,7 @@
             results.push(solveStrip(0, "Temp/Shrink"));
         } else {
             const Lx = parseFloat(document.getElementById('s_Lx').value);
+            const col_w = parseFloat(document.getElementById('s_col_w').value);
             const Mfac = wu * Lx**2;
             const cs_n = parseFloat(document.getElementById('s_cn_s').value);
             const cs_p = parseFloat(document.getElementById('s_cp_s').value);
@@ -548,17 +747,26 @@
             results.push(solveStrip(cs_p * Mfac, "Short (+)"));
             results.push(solveStrip(cl_n * Mfac, "Long (-)"));
             results.push(solveStrip(cl_p * Mfac, "Long (+)"));
+
+            // PUNCHING SHEAR CHECK
+            const Vu_punch = wu * Lx * Lx; 
+            const bo = 4 * (col_w + d); // Perimeter at d/2
+            const Vc_punch = 0.33 * Math.sqrt(fc) * bo * d / 1000; // kN
+            const PhiVc_punch = 0.75 * Vc_punch;
+            
+            html += `<div class="section-divider">PUNCHING SHEAR (2-WAY)</div>`;
+            html += createRow("Shear Perimeter (bo)", bo.toFixed(0) + " mm", "");
+            html += createRow("Punching Capacity", PhiVc_punch.toFixed(1) + " kN", "");
+            html += createRow("Approx. Demand (Vu)", Vu_punch.toFixed(1) + " kN", PhiVc_punch >= Vu_punch ? "SAFE" : "CHECK SHEAR");
         }
 
-        let html = `<div class="result-header">SLAB REINFORCEMENT (wu = ${wu.toFixed(2)} kPa)</div><div class="result-body">`;
         html += `<div class="table-wrapper"><table><thead><tr><th>Location</th><th>Mu (kNm)</th><th>Spacing</th><th>Remarks</th></tr></thead><tbody>`;
         results.forEach(r => {
             html += `<tr><td>${r.loc}</td><td>${r.mu.toFixed(2)}</td><td><b>${r.sp.toFixed(0)} mm</b></td><td>${r.rem}</td></tr>`;
         });
         html += `</tbody></table></div></div>`;
-        const resBox = document.getElementById('slab-results');
-        resBox.innerHTML = html;
-        resBox.style.display = 'block';
+        document.getElementById('slab-results').innerHTML = html;
+        document.getElementById('slab-results').style.display = 'block';
     }
 </script>
 </body>
