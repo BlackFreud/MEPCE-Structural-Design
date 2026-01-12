@@ -40,19 +40,10 @@
             align-items: center;
         }
 
-        .app-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
+        .app-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
+        .app-subtitle { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; }
 
-        .app-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        /* STUDENT INFO CARD */
+        /* INFO CARD */
         .student-info {
             background-color: rgba(255,255,255,0.1);
             padding: 10px 20px;
@@ -60,21 +51,9 @@
             border: 1px solid rgba(255,255,255,0.2);
             text-align: left;
             font-size: 0.9rem;
-            line-height: 1.4;
         }
-
-        .info-label {
-            color: var(--accent); /* Blue text for labels */
-            font-weight: bold;
-            color: #85c1e9;
-            margin-right: 8px;
-        }
-
-        .info-val {
-            font-weight: 600;
-            color: white;
-            text-transform: uppercase;
-        }
+        .info-label { color: #85c1e9; font-weight: bold; margin-right: 8px; }
+        .info-val { font-weight: 600; color: white; text-transform: uppercase; }
 
         /* NAVIGATION */
         nav {
@@ -85,7 +64,6 @@
             top: 0;
             z-index: 100;
         }
-
         nav button {
             background: none;
             border: none;
@@ -97,26 +75,12 @@
             transition: 0.3s;
             border-bottom: 4px solid transparent;
         }
-
-        nav button:hover {
-            color: white;
-            background-color: rgba(255,255,255,0.05);
-        }
-
-        nav button.active {
-            color: white;
-            border-bottom-color: var(--accent);
-            background-color: rgba(0,0,0,0.1);
-        }
+        nav button:hover { color: white; background-color: rgba(255,255,255,0.05); }
+        nav button.active { color: white; border-bottom-color: var(--accent); background-color: rgba(0,0,0,0.1); }
 
         /* MAIN CONTENT */
-        main {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            padding-bottom: 4rem;
-        }
-
+        main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; padding-bottom: 4rem; }
+        
         .module {
             display: none;
             background: white;
@@ -125,162 +89,44 @@
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
             animation: fadeIn 0.4s ease-out;
         }
+        .module.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .module.active {
-            display: block;
-        }
+        h2 { border-bottom: 2px solid var(--light); padding-bottom: 0.8rem; color: var(--primary); margin-top: 0; font-size: 1.6rem; }
+        h3 { color: var(--accent); margin-top: 2rem; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h2 { 
-            border-bottom: 2px solid var(--light); 
-            padding-bottom: 0.8rem; 
-            color: var(--primary); 
-            margin-top: 0; 
-            font-size: 1.6rem;
-        }
-        
-        h3 { 
-            color: var(--accent); 
-            margin-top: 2rem; 
-            font-size: 1.1rem; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* GRID INPUTS */
-        .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-            color: #555;
-        }
-
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: #555; }
         .form-group input, .form-group select {
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 1rem;
-            background-color: #fafafa;
-            transition: 0.2s;
+            padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; background-color: #fafafa; transition: 0.2s;
         }
+        .form-group input:focus { border-color: var(--accent); background-color: white; outline: none; }
 
-        .form-group input:focus, .form-group select:focus {
-            border-color: var(--accent);
-            background-color: white;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-
-        /* BUTTONS */
         .btn-calc {
-            width: 100%;
-            padding: 1.2rem;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            margin-top: 1rem;
-            box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3);
+            width: 100%; padding: 1.2rem; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none;
+            border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 1rem; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3);
         }
-
-        .btn-calc:hover { 
-            transform: translateY(-1px);
-            box-shadow: 0 6px 8px rgba(41, 128, 185, 0.4);
-        }
-
-        .btn-calc:active {
-            transform: translateY(1px);
-        }
+        .btn-calc:hover { transform: translateY(-1px); box-shadow: 0 6px 8px rgba(41, 128, 185, 0.4); }
 
         /* RESULTS BOX */
         .results-box {
-            margin-top: 2.5rem;
-            background-color: #fff;
-            border: 1px solid #e1e4e8;
-            border-left: 5px solid var(--accent);
-            border-radius: 4px;
-            padding: 0;
-            display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: 2.5rem; background-color: #fff; border: 1px solid #e1e4e8; border-left: 5px solid var(--accent);
+            border-radius: 4px; padding: 0; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-
-        .result-header {
-            background-color: #f8f9fa;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #eee;
-            font-weight: bold;
-            color: var(--primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .result-body {
-            padding: 1.5rem;
-        }
-
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid #f1f1f1;
-        }
-
+        .result-header { background-color: #f8f9fa; padding: 1rem 1.5rem; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
+        .result-body { padding: 1.5rem; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f1f1; }
         .result-row:last-child { border-bottom: none; }
         .result-label { font-weight: 600; color: #555; }
         
-        .tag {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: white;
-            text-transform: uppercase;
-        }
+        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; color: white; text-transform: uppercase; }
         .tag.pass { background-color: var(--success); }
         .tag.fail { background-color: var(--danger); }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-        }
-        
-        th, td {
-            text-align: left;
-            padding: 12px 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        th { 
-            background-color: #f8f9fa;
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        tr:last-child td { border-bottom: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: var(--primary); font-weight: 700; }
     </style>
 </head>
 <body>
@@ -291,7 +137,6 @@
             <div class="app-title">STRUCTURAL DESIGN PROGRAM</div>
             <div class="app-subtitle">NSCP 2015 / ACI 318-14 COMPLIANT</div>
         </div>
-        
         <div class="student-info">
             <div><span class="info-label">Project:</span> <span id="display-project" class="info-val">...</span></div>
             <div><span class="info-label">Name:</span> <span id="display-name" class="info-val">...</span></div>
@@ -309,7 +154,6 @@
 <main>
     <section id="beam" class="module active">
         <h2>Beam Design Module</h2>
-        
         <h3>1. Geometry & Materials</h3>
         <div class="input-grid">
             <div class="form-group"><label>Width b (mm)</label><input type="number" id="b_b" value="300"></div>
@@ -319,22 +163,19 @@
             <div class="form-group"><label>Main fy (MPa)</label><input type="number" id="b_fy" value="414"></div>
             <div class="form-group"><label>Stirrup fyt (MPa)</label><input type="number" id="b_fyt" value="275"></div>
         </div>
-
         <h3>2. Reinforcement</h3>
         <div class="input-grid">
             <div class="form-group"><label>Main Bar Dia (mm)</label><input type="number" id="b_db" value="20"></div>
             <div class="form-group"><label>No. of Bars</label><input type="number" id="b_n" value="3"></div>
             <div class="form-group"><label>Stirrup Dia (mm)</label><input type="number" id="b_ds" value="10"></div>
         </div>
-
         <h3>3. Loads & Serviceability</h3>
         <div class="input-grid">
             <div class="form-group"><label>Moment Mu (kNm)</label><input type="number" id="b_Mu" value="150"></div>
             <div class="form-group"><label>Shear Vu (kN)</label><input type="number" id="b_Vu" value="100"></div>
             <div class="form-group"><label>Torsion Tu (kNm)</label><input type="number" id="b_Tu" value="0"></div>
             <div class="form-group"><label>Span Length (m)</label><input type="number" id="b_L" value="6.0"></div>
-            <div class="form-group">
-                <label>Support Type</label>
+            <div class="form-group"><label>Support Type</label>
                 <select id="b_supp">
                     <option value="1">Simply Supported</option>
                     <option value="2">One End Continuous</option>
@@ -343,19 +184,15 @@
                 </select>
             </div>
         </div>
-
         <button class="btn-calc" onclick="calculateBeam()">RUN ANALYSIS</button>
-
         <div id="beam-results" class="results-box"></div>
     </section>
 
     <section id="column" class="module">
         <h2>Column Design Module</h2>
-        
         <h3>1. Geometry</h3>
         <div class="input-grid">
-            <div class="form-group">
-                <label>Shape</label>
+            <div class="form-group"><label>Shape</label>
                 <select id="c_shape" onchange="toggleColInputs()">
                     <option value="rect">Rectangular</option>
                     <option value="circ">Circular</option>
@@ -366,19 +203,16 @@
             <div class="form-group" id="c_D_grp" style="display:none"><label>Diameter (mm)</label><input type="number" id="c_D" value="400"></div>
             <div class="form-group"><label>Cover (mm)</label><input type="number" id="c_cc" value="40"></div>
         </div>
-
-        <h3>2. Material & Reinf</h3>
+        <h3>2. Material & Reinforcement</h3>
         <div class="input-grid">
             <div class="form-group"><label>fc' (MPa)</label><input type="number" id="c_fc" value="28"></div>
             <div class="form-group"><label>fy (MPa)</label><input type="number" id="c_fy" value="415"></div>
             <div class="form-group"><label>No. Bars</label><input type="number" id="c_nb" value="8"></div>
             <div class="form-group"><label>Bar Dia (mm)</label><input type="number" id="c_db" value="20"></div>
-            <div class="form-group">
-                <label>Tie Type</label>
+            <div class="form-group"><label>Tie Type</label>
                 <select id="c_tie"><option value="tied">Tied</option><option value="spiral">Spiral</option></select>
             </div>
         </div>
-
         <h3>3. Loads & Slenderness</h3>
         <div class="input-grid">
             <div class="form-group"><label>Axial Pu (kN)</label><input type="number" id="c_Pu" value="1000"></div>
@@ -386,29 +220,23 @@
             <div class="form-group"><label>Bot Moment M1 (kNm)</label><input type="number" id="c_M1" value="0"></div>
             <div class="form-group"><label>Unbraced Length (m)</label><input type="number" id="c_Lu" value="3.0"></div>
             <div class="form-group"><label>K Factor</label><input type="number" id="c_k" value="1.0"></div>
-            <div class="form-group">
-                <label>Frame Type</label>
+            <div class="form-group"><label>Frame Type</label>
                 <select id="c_sway"><option value="0">Non-Sway</option><option value="1">Sway</option></select>
             </div>
         </div>
-
         <button class="btn-calc" onclick="calculateColumn()">RUN ANALYSIS</button>
-
         <div id="col-results" class="results-box"></div>
     </section>
 
     <section id="slab" class="module">
         <h2>Slab Design Module</h2>
-        
         <h3>1. Configuration</h3>
-        <div class="form-group" style="margin-bottom: 1rem;">
-            <label>Design Method</label>
+        <div class="form-group"><label>Design Method</label>
             <select id="s_mode" onchange="toggleSlabInputs()">
                 <option value="1">One-Way Slab</option>
                 <option value="2">Two-Way Slab (Coefficient Method)</option>
             </select>
         </div>
-
         <h3>2. Materials & Load</h3>
         <div class="input-grid">
             <div class="form-group"><label>fc' (MPa)</label><input type="number" id="s_fc" value="21"></div>
@@ -419,13 +247,11 @@
             <div class="form-group"><label>Superimposed DL (kPa)</label><input type="number" id="s_DL" value="1.5"></div>
             <div class="form-group"><label>Live Load (kPa)</label><input type="number" id="s_LL" value="1.9"></div>
         </div>
-
         <div id="slab-oneway">
             <h3>3. One-Way Parameters</h3>
             <div class="input-grid">
                 <div class="form-group"><label>Clear Span (m)</label><input type="number" id="s_L" value="3.0"></div>
-                <div class="form-group">
-                    <label>Support</label>
+                <div class="form-group"><label>Support</label>
                     <select id="s_supp">
                         <option value="0.125">Simply Supported (1/8)</option>
                         <option value="0.10">One End Continuous (1/10)</option>
@@ -435,7 +261,6 @@
                 </div>
             </div>
         </div>
-
         <div id="slab-twoway" style="display:none;">
             <h3>3. Two-Way Parameters</h3>
             <div class="input-grid">
@@ -449,29 +274,24 @@
                 <div class="form-group"><label>Long Span Pos (+)</label><input type="number" id="s_cp_l" value="0.05"></div>
             </div>
         </div>
-
         <button class="btn-calc" onclick="calculateSlab()">RUN ANALYSIS</button>
         <div id="slab-results" class="results-box"></div>
     </section>
-
 </main>
 
 <script>
     // ==========================================
     //       USER CONFIGURATION (EDIT HERE)
     // ==========================================
-    
     const PROJECT_DETAILS = {
-        project: "FINAL PROPOSAL",       // Edit Project Name
-        name:    "ENGR. JAN FROYD R. ITEM",    // Edit Student Name
-        subject: "MEPCE 225"        // Edit Subject/Section
+        project: "FINAL PROPOSAL",       
+        name:    "ENGR. JAN FROYD R. ITEM",    
+        subject: "MEPCE 225"        
     };
 
     // ==========================================
-    //           APP LOGIC (DO NOT EDIT)
+    //           APP LOGIC
     // ==========================================
-
-    // Initialize Header on Load
     window.onload = function() {
         document.getElementById('display-project').textContent = PROJECT_DETAILS.project;
         document.getElementById('display-name').textContent = PROJECT_DETAILS.name;
@@ -481,39 +301,28 @@
     function switchTab(tabId) {
         document.querySelectorAll('.module').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(tabId).classList.add('active');
         event.target.classList.add('active');
     }
 
     function toggleColInputs() {
         const shape = document.getElementById('c_shape').value;
-        if(shape === 'rect') {
-            document.getElementById('c_b_grp').style.display = 'flex';
-            document.getElementById('c_h_grp').style.display = 'flex';
-            document.getElementById('c_D_grp').style.display = 'none';
-        } else {
-            document.getElementById('c_b_grp').style.display = 'none';
-            document.getElementById('c_h_grp').style.display = 'none';
-            document.getElementById('c_D_grp').style.display = 'flex';
-        }
+        const isRect = shape === 'rect';
+        document.getElementById('c_b_grp').style.display = isRect ? 'flex' : 'none';
+        document.getElementById('c_h_grp').style.display = isRect ? 'flex' : 'none';
+        document.getElementById('c_D_grp').style.display = isRect ? 'none' : 'flex';
     }
 
     function toggleSlabInputs() {
         const mode = document.getElementById('s_mode').value;
-        if(mode === '1') {
-            document.getElementById('slab-oneway').style.display = 'block';
-            document.getElementById('slab-twoway').style.display = 'none';
-        } else {
-            document.getElementById('slab-oneway').style.display = 'none';
-            document.getElementById('slab-twoway').style.display = 'block';
-        }
+        document.getElementById('slab-oneway').style.display = mode === '1' ? 'block' : 'none';
+        document.getElementById('slab-twoway').style.display = mode === '2' ? 'block' : 'none';
     }
 
     function createRow(label, val, status) {
         let tagClass = 'info';
-        if(status === 'PASS' || status === 'SAFE' || status === 'DUCTILE' || status === 'SHORT') tagClass = 'pass';
-        if(status === 'FAIL' || status === 'UNSAFE' || status === 'SLENDER') tagClass = 'fail';
+        if(['PASS','SAFE','DUCTILE','SHORT'].includes(status)) tagClass = 'pass';
+        if(['FAIL','UNSAFE','SLENDER','TRANSITION'].includes(status)) tagClass = 'fail';
         return `
         <div class="result-row">
             <span class="result-label">${label}</span>
@@ -521,14 +330,14 @@
         </div>`;
     }
 
-    // ================== CALCULATION FUNCTIONS ==================
-
+    // --- BEAM CALCULATION ---
     function calculateBeam() {
         const b = parseFloat(document.getElementById('b_b').value);
         const h = parseFloat(document.getElementById('b_h').value);
         const cc = parseFloat(document.getElementById('b_cc').value);
         const fc = parseFloat(document.getElementById('b_fc').value);
         const fy = parseFloat(document.getElementById('b_fy').value);
+        const fyt = parseFloat(document.getElementById('b_fyt').value);
         const db = parseFloat(document.getElementById('b_db').value);
         const n = parseFloat(document.getElementById('b_n').value);
         const ds = parseFloat(document.getElementById('b_ds').value);
@@ -539,72 +348,86 @@
         const supp = parseInt(document.getElementById('b_supp').value);
 
         const d = h - cc - ds - (db/2);
-        
-        // Build Report Header
         let html = `<div class="result-header">BEAM ANALYSIS RESULTS</div><div class="result-body">`;
 
-        // 1. Serviceability
+        // Serviceability
         const denom = {1:16, 2:18.5, 3:21, 4:8}[supp] || 16;
         const mod = 0.4 + (fy/700);
         const h_min = (L * 1000) / denom * mod;
         html += createRow("Min Thickness Req", h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
 
-        // 2. Flexure
+        // Flexure
         const As = n * Math.PI * Math.pow(db/2, 2);
         let beta1 = fc <= 28 ? 0.85 : Math.max(0.65, 0.85 - 0.05*(fc-28)/7);
         const a = (As * fy) / (0.85 * fc * b);
         const c = a / beta1;
         const et = 0.003 * ((d - c)/c);
-        
         let phi = 0.90;
         if(et <= 0.002) phi = 0.65;
         else if(et < 0.005) phi = 0.65 + (et - 0.002)*(250/3);
-        
         const Mn = (As * fy * (d - a/2)) / 1e6;
         const PhiMn = phi * Mn;
-        
         html += createRow("Tensile Strain", et.toFixed(4), et >= 0.005 ? "DUCTILE" : "TRANSITION");
         html += createRow("Flexural Capacity", PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
 
-        // 3. Shear
+        // Shear & Spacing
         const Vc = 0.17 * 1.0 * Math.sqrt(fc) * b * d / 1000;
         const PhiVc = 0.75 * Vc;
-        let shearStat = "OK";
+        let shearStat = "OK (No Reinf)";
         let shearTag = "SAFE";
         
-        if(Vu > PhiVc) {
-            const Vs_req = (Vu/0.75) - Vc;
-            shearStat = "Stirrups Req (Vs=" + Vs_req.toFixed(1) + "kN)";
-            // Max check
-            if(Vs_req > (0.66 * Math.sqrt(fc) * b * d / 1000)) {
-                shearStat = "SECTION TOO SMALL";
-                shearTag = "UNSAFE";
-            }
+        if(Vu > 0.5 * PhiVc) {
+             if (Vu <= PhiVc) {
+                 shearStat = "Min Stirrups Req";
+                 shearTag = "SAFE";
+                 // For min stirrups, spacing is usually d/2 or 600
+                 shearStat += ` (s = ${(d/2).toFixed(0)} mm)`;
+             } else {
+                const Vs_req = (Vu/0.75) - Vc;
+                // Max Check
+                const Vc_limit = 0.66 * Math.sqrt(fc) * b * d / 1000;
+                
+                if (Vs_req > Vc_limit) {
+                    shearStat = "SECTION TOO SMALL";
+                    shearTag = "UNSAFE";
+                } else {
+                    // Stirrup Spacing Calculation (s = Av * fyt * d / Vs)
+                    const Av = 2 * (Math.PI * Math.pow(ds/2, 2)); // 2 legs
+                    const s_req = (Av * fyt * d) / (Vs_req * 1000);
+                    
+                    // Max Spacing Limit
+                    let s_max = (Vs_req > 0.33 * Math.sqrt(fc) * b * d / 1000) ? d/4 : d/2;
+                    s_max = Math.min(s_max, 600);
+                    
+                    const s_final = Math.min(s_req, s_max);
+                    shearStat = `Use ${ds}mm @ ${Math.floor(s_final)} mm`;
+                    shearTag = "SAFE";
+                }
+             }
         }
+        
         html += createRow("Shear Capacity (Phi Vc)", PhiVc.toFixed(2) + " kN", "");
-        html += createRow("Shear Status", shearStat, shearTag);
+        html += createRow("Shear Design", shearStat, shearTag);
 
-        // 4. Torsion
+        // Torsion
         if(Tu > 0) {
             const Acp = b*h;
             const Pcp = 2*(b+h);
             const Tth = 0.75 * 0.083 * Math.sqrt(fc) * (Math.pow(Acp, 2)/Pcp) / 1e6;
             html += createRow("Threshold Torsion", Tth.toFixed(2) + " kNm", Tu < Tth ? "IGNORE" : "DESIGN REQ");
         }
-        
-        html += `</div>`; // Close Body
-
+        html += `</div>`;
         const resBox = document.getElementById('beam-results');
         resBox.innerHTML = html;
         resBox.style.display = 'block';
     }
 
+    // --- COLUMN CALCULATION ---
     function calculateColumn() {
         const shape = document.getElementById('c_shape').value;
         const b = parseFloat(document.getElementById('c_b').value);
         const h_dim = parseFloat(document.getElementById('c_h').value);
         const D = parseFloat(document.getElementById('c_D').value);
-        const cc = parseFloat(document.getElementById('c_cc').value);
         const fc = parseFloat(document.getElementById('c_fc').value);
         const fy = parseFloat(document.getElementById('c_fy').value);
         const nb = parseFloat(document.getElementById('c_nb').value);
@@ -620,10 +443,9 @@
         const h = shape === 'rect' ? h_dim : D;
         const width = shape === 'rect' ? b : D;
         const Ag = shape === 'rect' ? b*h : (Math.PI * D**2)/4;
-        
         let html = `<div class="result-header">COLUMN ANALYSIS RESULTS</div><div class="result-body">`;
 
-        // 1. Slenderness
+        // Slenderness
         const r = shape === 'rect' ? 0.3 * h : 0.25 * h;
         const klr = (k * Lu) / r;
         let limit = 22.0;
@@ -634,7 +456,7 @@
         const isSlender = klr > limit;
         html += createRow("Slenderness Ratio (kL/r)", klr.toFixed(2), isSlender ? "SLENDER" : "SHORT");
 
-        // 2. Magnification
+        // Magnification
         let Mc = Math.max(Math.abs(M2), Pu*(15 + 0.03*h)/1000);
         if(isSlender && sway === 0) {
             const Ec = 4700 * Math.sqrt(fc);
@@ -649,22 +471,20 @@
         }
         html += createRow("Design Moment (Mc)", Mc.toFixed(2) + " kNm", "");
 
-        // 3. Capacity
+        // Capacity
         const Ast = nb * Math.PI * Math.pow(db/2, 2);
         const phi_ax = tie === 'spiral' ? 0.75 : 0.65;
         const alpha = tie === 'spiral' ? 0.85 : 0.80;
         const Pn_max = alpha * (0.85*fc*(Ag-Ast) + Ast*fy) / 1000;
         const PhiPn = phi_ax * Pn_max;
-
         html += createRow("Max Axial Cap (Phi Pn)", PhiPn.toFixed(0) + " kN", PhiPn >= Pu ? "SAFE" : "UNSAFE");
-        
         html += `</div>`;
-
         const resBox = document.getElementById('col-results');
         resBox.innerHTML = html;
         resBox.style.display = 'block';
     }
 
+    // --- SLAB CALCULATION ---
     function calculateSlab() {
         const mode = document.getElementById('s_mode').value;
         const fc = parseFloat(document.getElementById('s_fc').value);
@@ -683,7 +503,6 @@
         const solveStrip = (Mu, label) => {
             let As_min = 0.0018 * 1000 * h;
             if(fy < 420) As_min = 0.0020 * 1000 * h;
-
             let As_req = 0;
             if(Mu > 0) {
                 const phi = 0.90;
@@ -697,7 +516,6 @@
             const Ab = Math.PI * (db/2)**2;
             const s_calc = (Ab / As_final) * 1000;
             const s_max = Mu > 0 ? Math.min(3*h, 450) : Math.min(5*h, 450);
-            
             return {
                 loc: label,
                 mu: Mu,
@@ -719,7 +537,6 @@
             const cs_p = parseFloat(document.getElementById('s_cp_s').value);
             const cl_n = parseFloat(document.getElementById('s_cn_l').value);
             const cl_p = parseFloat(document.getElementById('s_cp_l').value);
-
             results.push(solveStrip(cs_n * Mfac, "Short (-)"));
             results.push(solveStrip(cs_p * Mfac, "Short (+)"));
             results.push(solveStrip(cl_n * Mfac, "Long (-)"));
@@ -728,22 +545,14 @@
 
         let html = `<div class="result-header">SLAB REINFORCEMENT (wu = ${wu.toFixed(2)} kPa)</div><div class="result-body">`;
         html += `<table><thead><tr><th>Location</th><th>Mu (kNm)</th><th>Spacing</th><th>Remarks</th></tr></thead><tbody>`;
-        
         results.forEach(r => {
-            html += `<tr>
-                <td>${r.loc}</td>
-                <td>${r.mu.toFixed(2)}</td>
-                <td><b>${r.sp.toFixed(0)} mm</b></td>
-                <td>${r.rem}</td>
-            </tr>`;
+            html += `<tr><td>${r.loc}</td><td>${r.mu.toFixed(2)}</td><td><b>${r.sp.toFixed(0)} mm</b></td><td>${r.rem}</td></tr>`;
         });
         html += `</tbody></table></div>`;
-
         const resBox = document.getElementById('slab-results');
         resBox.innerHTML = html;
         resBox.style.display = 'block';
     }
 </script>
-
 </body>
 </html>
