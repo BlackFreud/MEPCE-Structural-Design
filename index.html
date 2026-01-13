@@ -95,15 +95,10 @@
         .section-divider { background: #f9f9f9; color: var(--primary); padding: 8px 12px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-top: 1.5rem; border-radius: 4px; border-left: 4px solid var(--accent); }
 
         /* CANVAS & VISUALS */
-        .chart-container { 
-            margin-top: 20px; 
-            background: #fff; 
-            border: 1px solid #eee; 
-            padding: 15px; 
-            border-radius: 4px;
-            text-align: center;
-        }
-        canvas { max-width: 100%; height: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .chart-wrapper { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+        .chart-card { flex: 1; min-width: 250px; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 4px; text-align: center; }
+        .chart-title { font-weight: 700; font-size: 0.8rem; margin-bottom: 10px; color: #555; text-transform: uppercase; }
+        canvas { max-width: 100%; height: auto; border: 1px solid #f0f0f0; }
         .chart-legend { font-size: 0.8rem; margin-top: 5px; color: #666; display: flex; justify-content: center; gap: 15px; flex-wrap:wrap;}
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -119,7 +114,7 @@
 <header>
     <div class="header-content">
         <div>
-            <div class="app-title">STRUCTURAL DESIGN PROPOSAL</div>
+            <div class="app-title">STRUCTURAL SUITE</div>
             <div class="app-subtitle">NSCP 2015 / ACI 318-14 (ZONE 4 READY)</div>
         </div>
         <div class="student-info">
@@ -139,6 +134,7 @@
 <main>
     <section id="beam" class="module active">
         <h2>Beam Design Module</h2>
+        
         <div class="form-group" style="margin-bottom: 1.5rem;">
             <label>Design Type</label>
             <select id="b_type" onchange="toggleBeamType()">
@@ -146,6 +142,7 @@
                 <option value="doubly">Doubly Reinforced</option>
             </select>
         </div>
+
         <h3>1. Geometry & Materials</h3>
         <div class="input-grid">
             <div class="form-group"><label>Width b (mm)</label><input type="number" id="b_b" value="300"></div>
@@ -155,12 +152,20 @@
             <div class="form-group"><label>Main fy (MPa)</label><input type="number" id="b_fy" value="414"></div>
             <div class="form-group"><label>Stirrup fyt (MPa)</label><input type="number" id="b_fyt" value="275"></div>
         </div>
+
         <h3>2. Tension Reinforcement</h3>
         <div class="input-grid">
-            <div class="form-group"><label>Tens. Bars (N)</label><input type="number" id="b_n" value="3"></div>
+            <div class="form-group"><label>Total Bars (N)</label><input type="number" id="b_n" value="4"></div>
             <div class="form-group"><label>Bar Dia (mm)</label><input type="number" id="b_db" value="20"></div>
             <div class="form-group"><label>Stirrup Dia (mm)</label><input type="number" id="b_ds" value="10"></div>
+            <div class="form-group"><label>Layers</label>
+                <select id="b_layers">
+                    <option value="1">1 Layer</option>
+                    <option value="2">2 Layers</option>
+                </select>
+            </div>
         </div>
+
         <div id="beam-comp-group" style="display:none;">
             <h3>3. Compression Reinforcement</h3>
             <div class="input-grid">
@@ -169,6 +174,7 @@
                 <div class="form-group"><label>Dist to Top d' (mm)</label><input type="number" id="b_dp" value="65"></div>
             </div>
         </div>
+
         <h3>4. Loads & Span</h3>
         <div class="input-grid">
             <div class="form-group"><label>Moment Mu (kNm)</label><input type="number" id="b_Mu" value="150"></div>
@@ -177,10 +183,10 @@
             <div class="form-group"><label>Span Length (m)</label><input type="number" id="b_L" value="6.0"></div>
             <div class="form-group"><label>Support Type</label>
                 <select id="b_supp">
-                    <option value="1">Simply Supported</option>
-                    <option value="2">One End Continuous</option>
-                    <option value="3">Both Ends Continuous</option>
-                    <option value="4">Cantilever</option>
+                    <option value="1">Simply Supported (L/16)</option>
+                    <option value="2">One End Continuous (L/18.5)</option>
+                    <option value="3">Both Ends Continuous (L/21)</option>
+                    <option value="4">Cantilever (L/8)</option>
                 </select>
             </div>
         </div>
@@ -314,7 +320,7 @@
     // =========================================================================
     //                          DRAWING FUNCTIONS (CANVAS)
     // =========================================================================
-    function drawBeamSection(id, b, h, cc, n, np, db, ds) {
+    function drawBeamSection(id, b, h, cc, n, np, db, ds, layers) {
         const c = document.getElementById(id);
         if(!c) return;
         const ctx = c.getContext('2d');
@@ -322,7 +328,7 @@
         ctx.clearRect(0,0,w,ht);
         
         // Scale
-        const padding = 40;
+        const padding = 20;
         const scale = Math.min((w-2*padding)/b, (ht-2*padding)/h);
         const rectW = b*scale;
         const rectH = h*scale;
@@ -343,32 +349,43 @@
         ctx.strokeRect(x0+inset, y0+inset, rectW-2*inset, rectH-2*inset);
         
         // Bars
-        const barRad = (db/2)*scale;
+        const barRad = (Math.max(db, 16)/2)*scale;
         ctx.fillStyle = '#c0392b';
         
         // Bottom Bars
         const yBot = y0 + rectH - inset - barRad;
-        const widthAvail = rectW - 2*inset - 2*barRad;
-        for(let i=0; i<n; i++) {
-            let cx = x0 + inset + barRad + (n>1 ? (i * widthAvail/(n-1)) : widthAvail/2);
-            ctx.beginPath(); ctx.arc(cx, yBot, barRad, 0, 2*Math.PI); ctx.fill();
+        
+        if (layers === 1) {
+            drawRow(ctx, n, x0, yBot, rectW, inset, barRad);
+        } else {
+            // Split into two rows
+            const n1 = Math.ceil(n/2);
+            const n2 = Math.floor(n/2);
+            const gap = 25 * scale;
+            drawRow(ctx, n1, x0, yBot, rectW, inset, barRad); // Row 1 (Bot)
+            drawRow(ctx, n2, x0, yBot - (db*scale) - gap, rectW, inset, barRad); // Row 2
         }
         
         // Top Bars
         if(np > 0) {
             const yTop = y0 + inset + barRad;
-            for(let i=0; i<np; i++) {
-                let cx = x0 + inset + barRad + (np>1 ? (i * widthAvail/(np-1)) : widthAvail/2);
-                ctx.beginPath(); ctx.arc(cx, yTop, barRad, 0, 2*Math.PI); ctx.fill();
-            }
+            drawRow(ctx, np, x0, yTop, rectW, inset, barRad);
         }
         
         // Labels
         ctx.fillStyle = '#333';
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`b=${b}mm`, w/2, y0-10);
+        ctx.fillText(`b=${b}mm`, w/2, y0-5);
         ctx.fillText(`h=${h}mm`, x0-25, y0+rectH/2);
+    }
+
+    function drawRow(ctx, count, xStart, yPos, width, inset, radius) {
+        const widthAvail = width - 2*inset - 2*radius;
+        for(let i=0; i<count; i++) {
+            let cx = xStart + inset + radius + (count>1 ? (i * widthAvail/(count-1)) : widthAvail/2);
+            ctx.beginPath(); ctx.arc(cx, yPos, radius, 0, 2*Math.PI); ctx.fill();
+        }
     }
 
     function drawColSection(id, shape, b, h, D, cc, n, db) {
@@ -378,7 +395,7 @@
         const w = c.width, ht = c.height;
         ctx.clearRect(0,0,w,ht);
         
-        const padding = 40;
+        const padding = 20;
         const dimX = shape=='rect' ? b : D;
         const dimY = shape=='rect' ? h : D;
         const scale = Math.min((w-2*padding)/dimX, (ht-2*padding)/dimY);
@@ -399,32 +416,26 @@
             ctx.strokeStyle = '#2980b9';
             ctx.strokeRect(cx - rw/2 + inset, cy - rh/2 + inset, rw - 2*inset, rh - 2*inset);
             
-            // Bars (Simplified perimeter distribution)
+            // Bars
             ctx.fillStyle = '#c0392b';
-            const barRad = (db/2)*scale;
-            // Draw 4 corners
+            const barRad = (Math.max(db, 16)/2)*scale;
             const bx = rw/2 - inset - barRad;
             const by = rh/2 - inset - barRad;
-            // Top/Bot
-            const nx = Math.ceil(n/4) + 1; // Approx
-            // Just drawing 4 corners + mid for visual
+            // Draw schematic corners
             ctx.beginPath(); ctx.arc(cx-bx, cy-by, barRad, 0, 2*Math.PI); ctx.fill();
             ctx.beginPath(); ctx.arc(cx+bx, cy-by, barRad, 0, 2*Math.PI); ctx.fill();
             ctx.beginPath(); ctx.arc(cx+bx, cy+by, barRad, 0, 2*Math.PI); ctx.fill();
             ctx.beginPath(); ctx.arc(cx-bx, cy+by, barRad, 0, 2*Math.PI); ctx.fill();
-            // Text: N bars
         } else {
             const rad = (D*scale)/2;
             ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
             
-            // Spiral
             const inset = cc*scale;
             ctx.beginPath(); ctx.arc(cx, cy, rad-inset, 0, 2*Math.PI); 
             ctx.strokeStyle = '#2980b9'; ctx.stroke();
             
-            // Bars
             ctx.fillStyle = '#c0392b';
-            const barRad = (db/2)*scale;
+            const barRad = (Math.max(db, 16)/2)*scale;
             const ringRad = rad - inset - barRad;
             for(let i=0; i<n; i++) {
                 const ang = (i / n) * 2 * Math.PI;
@@ -455,7 +466,9 @@
         const Mu = parseFloat(document.getElementById('b_Mu').value);
         const Vu = parseFloat(document.getElementById('b_Vu').value);
         const Tu = parseFloat(document.getElementById('b_Tu').value);
+        const layers = parseInt(document.getElementById('b_layers').value);
         
+        // Check Design Type (Singly/Doubly)
         const bType = document.getElementById('b_type').value;
         const isDoubly = bType === 'doubly';
         
@@ -466,27 +479,29 @@
             dp = parseFloat(document.getElementById('b_dp').value);
         }
 
-        const d = h - cc - ds - (db/2);
+        // Calculate d (Effective Depth) considering layers
+        let centroid_dist = cc + ds + (db/2);
+        if (layers === 2) {
+            centroid_dist += (db + 25)/2; // Shift up by half bar + half gap
+        }
+        const d = h - centroid_dist;
+
         const As = n * Math.PI * Math.pow(db/2, 2);
         const Asp = isDoubly ? np * Math.PI * Math.pow(dbp/2, 2) : 0;
 
         let html = `<div class="result-header">BEAM ANALYSIS: ${isDoubly ? 'DOUBLY' : 'SINGLY'} REINF.</div><div class="result-body">`;
 
-        // DIAGRAM
-        html += `<div class="chart-container"><canvas id="beamCanvas" width="250" height="200"></canvas><div style="font-size:0.8rem; margin-top:5px;">Schematic Section</div></div>`;
+        // 2. Schematic Diagram
+        html += `<div class="chart-card"><div class="chart-title">SECTION PREVIEW</div><div style="display:flex; justify-content:center;"><canvas id="beamCanvas" width="250" height="200"></canvas></div></div>`;
 
-        // 1. Serviceability (Min Thickness Table 409.3.1.1)
-        const denomMap = {1:16, 2:18.5, 3:21, 4:8};
+        // 3. Serviceability Check (NSCP Table 409.3.1.1)
+        const denomMap = {1:16, 2:18.5, 3:21, 4:8}; 
         const denom = denomMap[supp] || 16;
         const mod = 0.4 + (fy/700);
         const h_min = (L * 1000) / denom * mod;
         html += createRow("Min Thickness Req", h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
 
-        // 2. Development Length
-        const ld_calc = (fy / (1.1 * Math.sqrt(fc))) * db; 
-        html += createRow("Dev. Length (Ld)", ld_calc.toFixed(0) + " mm", "");
-
-        // 3. Flexural Analysis
+        // 4. Flexural Analysis
         let beta1 = fc <= 28 ? 0.85 : Math.max(0.65, 0.85 - 0.05*(fc-28)/7);
         let c, a, Mn, et, phi, fs_prime;
         
@@ -496,63 +511,60 @@
             Mn = (As * fy * (d - a/2)) / 1e6;
         } else {
             let c_trial = d / 3; 
-            for(let i=0; i<50; i++) {
+            for(let i=0; i<100; i++) {
                 let es_prime = 0.003 * (c_trial - dp)/c_trial;
                 let fsp = Math.min(Math.max(es_prime * 200000, -fy), fy);
                 let Cc = 0.85 * fc * beta1 * c_trial * b;
                 let Cs = Asp * (fsp - 0.85*fc);
-                let T = As * fy;
+                let T = As * fy; 
                 let residual = Cc + Cs - T;
                 if(Math.abs(residual) < 100) break;
                 c_trial = c_trial - residual / (0.85*fc*beta1*b);
             }
             c = c_trial;
-            a = beta1 * c;
             let es_prime = 0.003 * (c - dp)/c;
-            fs_prime = Math.min(Math.max(es_prime * 200000, -fy), fy);
-            let Cc = 0.85 * fc * a * b;
-            let Cs = Asp * (fs_prime - 0.85*fc);
-            Mn = (Cc*(d-a/2) + Cs*(d-dp)) / 1e6;
-            html += createRow("Comp. Steel Stress", fs_prime.toFixed(1) + " MPa", Math.abs(fs_prime) >= fy ? "YIELD" : "ELASTIC");
+            let fsp = Math.min(Math.max(es_prime * 200000, -fy), fy);
+            let Cc = 0.85 * fc * beta1 * c * b;
+            let Cs = Asp * (fsp - 0.85*fc);
+            Mn = (Cc*(d - beta1*c/2) + Cs*(d-dp)) / 1e6;
+            html += createRow("Comp. Steel Stress", fsp.toFixed(1) + " MPa", Math.abs(fsp) >= fy ? "YIELD" : "ELASTIC");
         }
 
         et = 0.003 * ((d - c)/c);
-        phi = 0.90;
-        if(et <= 0.002) phi = 0.65;
-        else if(et < 0.005) phi = 0.65 + (et - 0.002)*(250/3);
+        phi = et >= 0.005 ? 0.90 : 0.65 + (et - 0.002)*(250/3);
+        phi = Math.min(Math.max(phi, 0.65), 0.90);
         const PhiMn = phi * Mn;
         
+        html += createRow("Effective Depth (d)", d.toFixed(1) + " mm", "");
         html += createRow("Tensile Strain", et.toFixed(4), et >= 0.005 ? "DUCTILE" : "TRANSITION");
         html += createRow("Flexural Capacity", PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
 
-        // 4. Shear & Detailing
+        // 5. Shear & Detailing
         html += `<div class="section-divider">SHEAR & SEISMIC DETAILING</div>`;
         const Vc = 0.17 * 1.0 * Math.sqrt(fc) * b * d / 1000;
         const PhiVc = 0.75 * Vc;
         let shearStat = "OK (No Reinf)";
-        let shearTag = "SAFE";
         
         if(Vu > 0.5 * PhiVc) {
-             if (Vu <= PhiVc) {
-                 shearStat = `Min Stirrups @ ${(d/2).toFixed(0)}mm`;
-             } else {
+            if (Vu <= PhiVc) {
+                shearStat = `Min Stirrups @ ${(d/2).toFixed(0)}mm`;
+            } else {
                 const Vs_req = (Vu/0.75) - Vc;
                 const Vc_limit = 0.66 * Math.sqrt(fc) * b * d / 1000;
                 if (Vs_req > Vc_limit) {
                     shearStat = "FAIL: SEC TOO SMALL";
-                    shearTag = "UNSAFE";
                 } else {
                     const Av = 2 * (Math.PI * Math.pow(ds/2, 2)); 
-                    const s_req = (Av * fyt * d) / (Vs_req * 1000);
+                    const s_req = (Av * fyt * d) / (Vs_req * 1000); 
                     let s_max = (Vs_req > 0.33 * Math.sqrt(fc) * b * d / 1000) ? d/4 : d/2;
                     s_max = Math.min(s_max, 600);
                     const s_final = Math.min(s_req, s_max);
                     shearStat = `Use ${ds}mm @ ${Math.floor(s_final)}mm`;
                 }
-             }
+            }
         }
         html += createRow("Shear Capacity (Phi Vc)", PhiVc.toFixed(2) + " kN", "");
-        html += createRow("Shear Design", shearStat, shearTag);
+        html += createRow("Shear Design", shearStat, "");
 
         // Seismic Hoops
         const s_seismic = Math.min(d/4, 8*db, 24*ds, 300);
@@ -568,8 +580,8 @@
         document.getElementById('beam-results').innerHTML = html;
         document.getElementById('beam-results').style.display = 'block';
         
-        // Draw
-        setTimeout(() => drawBeamSection('beamCanvas', b, h, cc, n, np, db, ds), 100);
+        const barsTop = isDoubly ? np : 0;
+        setTimeout(() => drawBeamSection('beamCanvas', b, h, cc, n, barsTop, db, ds, layers), 100);
     }
 
     // --- COLUMN CALCULATION & PLOTTING ---
@@ -593,11 +605,20 @@
         // 1. Basic Analysis
         let html = `<div class="result-header">COLUMN ANALYSIS</div><div class="result-body">`;
         
-        // Visual
-        html += `<div class="chart-container" style="display:flex; justify-content:space-around;">
-            <canvas id="colCanvas" width="100" height="100"></canvas>
-            <div><canvas id="pmChart" width="180" height="180"></canvas>
-            <div class="chart-legend"><span class="dot" style="background:#27ae60"></span> Cap <span class="dot" style="background:#c0392b"></span> Load</div></div>
+        // Visual Structure
+        html += `<div class="chart-wrapper">
+            <div class="chart-card">
+                <div class="chart-title">P-M INTERACTION CURVE</div>
+                <canvas id="pmChart" width="300" height="250"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item"><span class="dot" style="background:#27ae60"></span> Capacity</div>
+                    <div class="legend-item"><span class="dot" style="background:#c0392b"></span> Your Load</div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">SECTION PREVIEW</div>
+                <div style="display:flex; justify-content:center;"><canvas id="colCanvas" width="150" height="150"></canvas></div>
+            </div>
         </div>`;
 
         // Slenderness
@@ -632,51 +653,53 @@
         const beta1 = fc <= 28 ? 0.85 : 0.65; // Simplified beta
 
         let points = [];
-        let c_vals = [dim*2, dim, dim*0.8, dim*0.6, dim*0.4, dim*0.2, dim*0.1, 0];
-        const area = shape=='rect' ? b*h : Math.PI*D*D/4;
-        
-        c_vals.forEach(c => {
-            let Pn, Mn, phi;
-            if(c >= dim*1.5) { // Pure Comp
-                Pn = 0.80 * (0.85*fc*(area - As_total) + As_total*fy); // Tied
-                Mn = 0;
-                phi = 0.65;
-            } else if (c <= 0.01) { // Pure Tension
-                Pn = -As_total * fy;
-                Mn = 0;
-                phi = 0.90;
-            } else {
-                let a = beta1 * c;
-                let Cc = shape=='rect' ? 0.85 * fc * a * b : 0.85*fc*area*0.7; // Circle approx
-                let es_s = 0.003 * (d - c)/c;
-                let es_p = 0.003 * (c - d_prime)/c;
-                let fs_s = Math.min(Math.max(es_s * 200000, -fy), fy);
-                let fs_p = Math.min(Math.max(es_p * 200000, -fy), fy);
-                
-                let F_cs = As_face * (fs_p - 0.85*fc);
-                let F_ts = As_face * fs_s * -1; 
-                
-                Pn = Cc + F_cs + F_ts;
-                Mn = Cc*(dim/2 - a/2) + F_cs*(dim/2 - d_prime) - F_ts*(d - dim/2);
-                
-                let et = 0.003 * (d-c)/c;
-                if(et <= 0.002) phi = 0.65;
-                else if(et >= 0.005) phi = 0.90;
-                else phi = 0.65 + (et-0.002)*(250/3);
+        const steps = 50; 
+        for(let i=0; i<=steps; i++) {
+            let c;
+            if(i < 5) c = dim * (3 - i*0.2); 
+            else if (i > steps-5) c = (steps-i) * 0.01 * dim; 
+            else {
+                let t = (i-5)/(steps-10);
+                c = dim * 1.5 * (1-t) + 0.1*dim*t;
             }
-            points.push({x: Math.abs(Mn*phi/1e6), y: Pn*phi/1000});
-        });
+            
+            let Pn, Mn, phi;
+            let a = beta1 * c;
+            let Cc = shape=='rect' ? 0.85 * fc * a * b : 0.85*fc*(Math.PI*D*D/4)*(a/D)*0.9; 
+            
+            let es_s = 0.003 * (d - c)/c;
+            let es_p = 0.003 * (c - d_prime)/c;
+            let fs_s = Math.min(Math.max(es_s * 200000, -fy), fy);
+            let fs_p = Math.min(Math.max(es_p * 200000, -fy), fy);
+            
+            let F_cs = As_face * (fs_p - 0.85*fc);
+            let F_ts = As_face * (-fs_s); 
+            
+            Pn = Cc + F_cs + F_ts;
+            Mn = Cc*(dim/2 - a/2) + F_cs*(dim/2 - d_prime) - F_ts*(d - dim/2);
+            
+            let et = 0.003 * (d-c)/c;
+            if(et <= 0.002) phi = 0.65;
+            else if(et >= 0.005) phi = 0.90;
+            else phi = 0.65 + (et-0.002)*(250/3);
+            
+            const Pmax = 0.80 * (0.85*fc*((shape=='rect'?b*h:Math.PI*D*D/4) - As_total) + As_total*fy);
+            if(Pn > Pmax) Pn = Pmax;
 
+            points.push({x: Math.abs(Mn*phi/1e6), y: Pn*phi/1000});
+        }
+        
         html += `</div>`;
         document.getElementById('col-results').innerHTML = html;
         document.getElementById('col-results').style.display = 'block';
 
-        drawInteractionDiagram(points, Mc, Pu);
-        drawColSection('colCanvas', shape, b, h, D, 40, nb, db);
+        drawPMCurve(points, Mc, Pu);
+        setTimeout(() => drawColSection('colCanvas', shape, b, h, D, 40, nb, db), 100);
     }
 
-    function drawInteractionDiagram(points, Mu, Pu) {
+    function drawPMCurve(points, Mu, Pu) {
         const c = document.getElementById('pmChart');
+        if(!c) return;
         const ctx = c.getContext('2d');
         const w = c.width, h = c.height;
         ctx.clearRect(0,0,w,h);
@@ -686,16 +709,16 @@
         
         // Axis
         ctx.beginPath();
-        ctx.moveTo(30, 10); ctx.lineTo(30, h-20); // Y
-        ctx.lineTo(w-10, h-20); // X
+        ctx.moveTo(40, 10); ctx.lineTo(40, h-30); 
+        ctx.lineTo(w-10, h-30); 
         ctx.strokeStyle = '#333';
         ctx.stroke();
         
         // Curve
         ctx.beginPath();
         points.forEach((p, i) => {
-            let px = 30 + (p.x / maxX) * (w-40);
-            let py = (h-20) - (p.y / maxY) * (h-30);
+            let px = 40 + (p.x / maxX) * (w-50);
+            let py = (h-30) - (p.y / maxY) * (h-40);
             if(i==0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         });
         ctx.strokeStyle = '#27ae60';
@@ -703,12 +726,18 @@
         ctx.stroke();
         
         // Point
-        let dx = 30 + (Math.abs(Mu) / maxX) * (w-40);
-        let dy = (h-20) - (Pu / maxY) * (h-30);
+        let dx = 40 + (Math.abs(Mu) / maxX) * (w-50);
+        let dy = (h-30) - (Pu / maxY) * (h-40);
         ctx.beginPath();
-        ctx.arc(dx, dy, 4, 0, 2*Math.PI);
+        ctx.arc(dx, dy, 5, 0, 2*Math.PI);
         ctx.fillStyle = '#c0392b';
         ctx.fill();
+        
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '10px Arial';
+        ctx.fillText("Pn (kN)", 5, 15);
+        ctx.fillText("Mn (kNm)", w-60, h-15);
     }
 
     // --- SLAB CALCULATION ---
