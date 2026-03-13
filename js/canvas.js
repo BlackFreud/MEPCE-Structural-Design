@@ -1,335 +1,391 @@
 /**
  * @file canvas.js
- * @description All HTML5 Canvas drawing routines:
- *              - Beam cross-section (singly & doubly reinforced)
- *              - Column cross-section (rectangular & circular)
- *              - P-M Interaction Curve
+ * @description Canvas 2D drawing routines.
+ *              All functions share a consistent signature:
+ *              drawXxx(canvasId, ...params) — R2 fix.
+ *              Functions: drawBeamSection, drawColSection, drawPMCurve, drawSlabSection
  * @module canvas
+ * @requires utils.js
  */
-
 "use strict";
 
-// ---------------------------------------------------------------------------
-// THEME COLORS (mirrors CSS variables for canvas use)
-// ---------------------------------------------------------------------------
 const COLOR = {
-  concrete:  "#d8d5cf",
-  stirrup:   "#2980b9",
-  bar:       "#c0392b",
-  axis:      "#444",
-  curve:     "#27ae60",
-  point:     "#c0392b",
-  text:      "#555",
-  border:    "#888",
-  gridLine:  "#e8e8e8",
+  concrete: "#d8d5cf",
+  stirrup:  "#2980b9",
+  bar:      "#c0392b",
+  axis:     "#444",
+  curve:    "#27ae60",
+  point:    "#c0392b",
+  text:     "#555",
+  border:   "#888",
+  grid:     "#efefef",
 };
 
-// ---------------------------------------------------------------------------
+// =============================================================================
 // BEAM SECTION
-// ---------------------------------------------------------------------------
+// =============================================================================
 
 /**
- * Draws a beam cross-section schematic on a canvas element.
- * Shows concrete outline, stirrup rectangle, tension bars (1 or 2 layers),
- * and optional compression bars at the top.
- *
- * @param {string} canvasId - ID of the target <canvas> element.
- * @param {number} b        - Beam width (mm).
- * @param {number} h        - Beam overall depth (mm).
- * @param {number} cc       - Clear cover to stirrup (mm).
- * @param {number} n        - Number of tension bars.
- * @param {number} np       - Number of compression bars (0 = singly reinforced).
- * @param {number} db       - Tension bar diameter (mm).
- * @param {number} ds       - Stirrup bar diameter (mm).
- * @param {number} layers   - Number of tension bar layers (1 or 2).
+ * @param {string} canvasId
+ * @param {number} b       Width (mm)
+ * @param {number} h       Depth (mm)
+ * @param {number} cc      Clear cover (mm)
+ * @param {number} n       Tension bars
+ * @param {number} np      Compression bars (0 = singly)
+ * @param {number} db      Tension bar Ø (mm)
+ * @param {number} ds      Stirrup Ø (mm)
+ * @param {number} layers  1 or 2
  */
 function drawBeamSection(canvasId, b, h, cc, n, np, db, ds, layers) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const PAD = 24;
+  const PAD   = 28;
   const scale = Math.min((W - 2 * PAD) / b, (H - 2 * PAD) / h);
-  const rectW = b * scale;
-  const rectH = h * scale;
-  const x0 = (W - rectW) / 2;
-  const y0 = (H - rectH) / 2;
+  const rW    = b * scale, rH = h * scale;
+  const x0    = (W - rW) / 2, y0 = (H - rH) / 2;
 
-  // --- Concrete body ---
-  ctx.fillStyle = COLOR.concrete;
-  ctx.fillRect(x0, y0, rectW, rectH);
+  // Concrete
+  ctx.fillStyle   = COLOR.concrete;
+  ctx.fillRect(x0, y0, rW, rH);
   ctx.strokeStyle = COLOR.border;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x0, y0, rectW, rectH);
+  ctx.lineWidth   = 2;
+  ctx.strokeRect(x0, y0, rW, rH);
 
-  // --- Stirrup rectangle ---
+  // Stirrup
   const inset = cc * scale;
   ctx.strokeStyle = COLOR.stirrup;
-  ctx.lineWidth = Math.max(1, ds * scale * 0.5);
-  ctx.strokeRect(x0 + inset, y0 + inset, rectW - 2 * inset, rectH - 2 * inset);
+  ctx.lineWidth   = Math.max(1.5, ds * scale * 0.4);
+  ctx.strokeRect(x0 + inset, y0 + inset, rW - 2 * inset, rH - 2 * inset);
 
-  // --- Tension bars ---
+  // Bars
   const barRad = Math.max((db / 2) * scale, 4);
   ctx.fillStyle = COLOR.bar;
 
   if (layers === 1) {
-    _drawBarRow(ctx, n, x0, y0 + rectH - inset - barRad, rectW, inset, barRad);
+    _barRow(ctx, n, x0, y0 + rH - inset - barRad, rW, inset, barRad);
   } else {
-    // Two-layer: place row 1 at bottom, row 2 one bar-diameter + 25 mm gap above
-    const row1Y = y0 + rectH - inset - barRad;
     const rowGap = (db + 25) * scale;
-    const n1 = Math.ceil(n / 2);
-    const n2 = Math.floor(n / 2);
-    _drawBarRow(ctx, n1, x0, row1Y,           rectW, inset, barRad);
-    _drawBarRow(ctx, n2, x0, row1Y - rowGap,  rectW, inset, barRad);
+    const yBot   = y0 + rH - inset - barRad;
+    _barRow(ctx, Math.ceil(n / 2),  x0, yBot,          rW, inset, barRad);
+    _barRow(ctx, Math.floor(n / 2), x0, yBot - rowGap, rW, inset, barRad);
   }
 
-  // --- Compression bars (doubly reinforced) ---
   if (np > 0) {
-    const yTop = y0 + inset + barRad;
-    _drawBarRow(ctx, np, x0, yTop, rectW, inset, barRad);
+    _barRow(ctx, np, x0, y0 + inset + barRad, rW, inset, barRad);
   }
 
-  // --- Dimension labels ---
+  // Labels
   ctx.fillStyle = COLOR.text;
-  ctx.font = "bold 11px 'Courier New', monospace";
+  ctx.font      = "bold 11px 'Courier New', monospace";
   ctx.textAlign = "center";
-  ctx.fillText(`b = ${b} mm`, W / 2, y0 - 8);
+  ctx.fillText(`b = ${b}`, W / 2, y0 - 10);
   ctx.save();
-  ctx.translate(x0 - 10, y0 + rectH / 2);
+  ctx.translate(x0 - 14, y0 + rH / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText(`h = ${h} mm`, 0, 0);
+  ctx.fillText(`h = ${h}`, 0, 0);
   ctx.restore();
 }
 
-/**
- * Internal helper — draws a horizontal row of evenly-spaced circular bars.
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} count   - Number of bars.
- * @param {number} x0      - Left edge of beam outline.
- * @param {number} yPos    - Centroid Y of bar row.
- * @param {number} width   - Full beam width (scaled).
- * @param {number} inset   - Cover inset (scaled).
- * @param {number} radius  - Bar radius (scaled).
- */
-function _drawBarRow(ctx, count, x0, yPos, width, inset, radius) {
-  const availW = width - 2 * inset - 2 * radius;
+function _barRow(ctx, count, x0, yPos, width, inset, radius) {
+  const avail = width - 2 * inset - 2 * radius;
   for (let i = 0; i < count; i++) {
-    const cx =
-      x0 + inset + radius + (count > 1 ? (i * availW) / (count - 1) : availW / 2);
-    ctx.beginPath();
-    ctx.arc(cx, yPos, radius, 0, 2 * Math.PI);
-    ctx.fill();
+    const cx = x0 + inset + radius + (count > 1 ? (i * avail) / (count - 1) : avail / 2);
+    ctx.beginPath(); ctx.arc(cx, yPos, radius, 0, 2 * Math.PI); ctx.fill();
   }
 }
 
-// ---------------------------------------------------------------------------
+// =============================================================================
 // COLUMN SECTION
-// ---------------------------------------------------------------------------
+// =============================================================================
 
 /**
- * Draws a column cross-section schematic (rectangular or circular).
- *
- * @param {string} canvasId - ID of the target <canvas> element.
- * @param {string} shape    - "rect" or "circ".
- * @param {number} b        - Width (mm) — rectangular only.
- * @param {number} h        - Depth (mm) — rectangular only.
- * @param {number} D        - Diameter (mm) — circular only.
- * @param {number} cc       - Clear cover (mm).
- * @param {number} nb       - Total number of longitudinal bars.
- * @param {number} db       - Bar diameter (mm).
+ * @param {string} canvasId
+ * @param {string} shape  "rect" | "circ"
+ * @param {number} b      Width (mm)
+ * @param {number} h      Depth (mm)
+ * @param {number} D      Diameter (mm)
+ * @param {number} cc     Cover (mm)
+ * @param {number} nb     Total bars
+ * @param {number} db     Bar Ø (mm)
  */
 function drawColSection(canvasId, shape, b, h, D, cc, nb, db) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
-
+  const cx = W / 2, cy = H / 2;
   const PAD = 20;
-  const cx = W / 2;
-  const cy = H / 2;
 
   if (shape === "rect") {
     const scale = Math.min((W - 2 * PAD) / b, (H - 2 * PAD) / h);
-    const rw = b * scale;
-    const rh = h * scale;
+    const rw = b * scale, rh = h * scale;
     const inset = cc * scale;
     const barRad = Math.max((db / 2) * scale, 4);
 
-    // Concrete
-    ctx.fillStyle = COLOR.concrete;
+    ctx.fillStyle   = COLOR.concrete;
     ctx.fillRect(cx - rw / 2, cy - rh / 2, rw, rh);
-    ctx.strokeStyle = COLOR.border;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = COLOR.border; ctx.lineWidth = 2;
     ctx.strokeRect(cx - rw / 2, cy - rh / 2, rw, rh);
 
-    // Tie
-    ctx.strokeStyle = COLOR.stirrup;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(
-      cx - rw / 2 + inset, cy - rh / 2 + inset,
-      rw - 2 * inset, rh - 2 * inset
-    );
+    ctx.strokeStyle = COLOR.stirrup; ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx - rw/2 + inset, cy - rh/2 + inset, rw - 2*inset, rh - 2*inset);
 
-    // Bars — schematic corners + intermediate per face
     ctx.fillStyle = COLOR.bar;
     const bx = rw / 2 - inset - barRad;
     const by = rh / 2 - inset - barRad;
-    const corners = [
-      [cx - bx, cy - by], [cx + bx, cy - by],
-      [cx + bx, cy + by], [cx - bx, cy + by],
-    ];
-    corners.forEach(([x, y]) => {
-      ctx.beginPath(); ctx.arc(x, y, barRad, 0, 2 * Math.PI); ctx.fill();
+    [[cx-bx,cy-by],[cx+bx,cy-by],[cx+bx,cy+by],[cx-bx,cy+by]].forEach(([x,y]) => {
+      ctx.beginPath(); ctx.arc(x, y, barRad, 0, 2*Math.PI); ctx.fill();
     });
-
   } else {
-    // Circular column
-    const scale = (Math.min(W, H) - 2 * PAD) / D;
-    const rad = (D * scale) / 2;
-    const inset = cc * scale;
+    const scale  = (Math.min(W, H) - 2 * PAD) / D;
+    const rad    = D * scale / 2;
+    const inset  = cc * scale;
     const barRad = Math.max((db / 2) * scale, 4);
-    const ringRad = rad - inset - barRad;
+    const ring   = rad - inset - barRad;
 
-    // Concrete circle
-    ctx.fillStyle = COLOR.concrete;
-    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle   = COLOR.concrete;
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 2*Math.PI); ctx.fill();
     ctx.strokeStyle = COLOR.border; ctx.lineWidth = 2; ctx.stroke();
 
-    // Spiral / tie ring
     ctx.strokeStyle = COLOR.stirrup; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx, cy, rad - inset, 0, 2 * Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, rad - inset, 0, 2*Math.PI); ctx.stroke();
 
-    // Bars equally spaced on ring
     ctx.fillStyle = COLOR.bar;
     for (let i = 0; i < nb; i++) {
       const ang = (i / nb) * 2 * Math.PI - Math.PI / 2;
-      const bx = cx + Math.cos(ang) * ringRad;
-      const by = cy + Math.sin(ang) * ringRad;
-      ctx.beginPath(); ctx.arc(bx, by, barRad, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + Math.cos(ang)*ring, cy + Math.sin(ang)*ring, barRad, 0, 2*Math.PI); ctx.fill();
     }
   }
 }
 
-// ---------------------------------------------------------------------------
+// =============================================================================
 // P-M INTERACTION CURVE
-// ---------------------------------------------------------------------------
+// =============================================================================
 
 /**
- * Plots a P-M interaction diagram on a canvas element.
- * Draws axes, capacity curve, grid lines, and marks the design load point.
- *
- * @param {string} canvasId - ID of the target <canvas> element.
- * @param {Array<{x: number, y: number}>} points - Array of {x: Mn (kNm), y: Pn (kN)} curve points.
- * @param {number} Mu - Design moment (kNm) to plot as demand point.
- * @param {number} Pu - Design axial load (kN) to plot as demand point.
+ * @param {string} canvasId
+ * @param {Array<{x:number,y:number}>} points  φMn (kNm) vs φPn (kN)
+ * @param {number} Mu  Demand moment (kNm)
+ * @param {number} Pu  Demand axial (kN)
  */
 function drawPMCurve(canvasId, points, Mu, Pu) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const margin = { top: 20, right: 20, bottom: 36, left: 48 };
-  const plotW = W - margin.left - margin.right;
-  const plotH = H - margin.top - margin.bottom;
+  const m  = { top:20, right:16, bottom:36, left:50 };
+  const pW = W - m.left - m.right;
+  const pH = H - m.top  - m.bottom;
 
-  const validPts = points.filter(p => isFinite(p.x) && isFinite(p.y));
-  if (!validPts.length) return;
+  // FIX-02: only plot points with Pn ≥ 0 (tension half not shown on standard diagram)
+  const valid = points.filter(p => isFinite(p.x) && isFinite(p.y) && p.y >= 0);
+  if (!valid.length) return;
 
-  const maxX = Math.max(...validPts.map(p => p.x), Math.abs(Mu)) * 1.25;
-  const maxY = Math.max(...validPts.map(p => p.y), Pu) * 1.20;
+  const maxX = Math.max(...valid.map(p => p.x), Math.abs(Mu)) * 1.28 || 1;
+  const maxY = Math.max(...valid.map(p => p.y), Pu)            * 1.20 || 1;
 
-  /** Maps data coords → canvas coords */
-  const toCanvas = (x, y) => ({
-    px: margin.left + (x / maxX) * plotW,
-    py: margin.top + plotH - (y / maxY) * plotH,
+  const toC = (x, y) => ({
+    px: m.left  + (Math.max(0, x) / maxX) * pW,
+    py: m.top   + pH - (Math.max(0, y) / maxY) * pH,
   });
 
-  // --- Grid lines ---
-  ctx.strokeStyle = COLOR.gridLine;
-  ctx.lineWidth = 1;
+  // --- Grid ---
+  ctx.strokeStyle = COLOR.grid; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
-    const { px } = toCanvas((maxX / 4) * i, 0);
-    const { py } = toCanvas(0, (maxY / 4) * i);
-    ctx.beginPath(); ctx.moveTo(px, margin.top); ctx.lineTo(px, margin.top + plotH); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(margin.left, py); ctx.lineTo(margin.left + plotW, py); ctx.stroke();
+    const {px} = toC(maxX / 4 * i, 0);
+    const {py} = toC(0, maxY / 4 * i);
+    ctx.beginPath(); ctx.moveTo(px, m.top);   ctx.lineTo(px, m.top + pH);  ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(m.left, py);  ctx.lineTo(m.left + pW, py); ctx.stroke();
   }
 
   // --- Axes ---
-  ctx.strokeStyle = COLOR.axis;
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = COLOR.axis; ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(margin.left, margin.top);
-  ctx.lineTo(margin.left, margin.top + plotH);
-  ctx.lineTo(margin.left + plotW, margin.top + plotH);
+  ctx.moveTo(m.left, m.top); ctx.lineTo(m.left, m.top + pH); ctx.lineTo(m.left + pW, m.top + pH);
   ctx.stroke();
 
-  // --- Capacity curve ---
+  // FIX-02: set clip region so nothing draws outside plot area
+  ctx.save();
   ctx.beginPath();
-  validPts.forEach((p, i) => {
-    const { px, py } = toCanvas(p.x, p.y);
-    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-  });
-  ctx.strokeStyle = COLOR.curve;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.stroke();
+  ctx.rect(m.left, m.top, pW, pH);
+  ctx.clip();
 
-  // Light fill under curve
+  // --- Capacity fill under curve ---
   ctx.beginPath();
-  validPts.forEach((p, i) => {
-    const { px, py } = toCanvas(p.x, p.y);
-    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-  });
-  const { px: lastPx } = toCanvas(validPts[validPts.length - 1].x, 0);
-  const { py: basePy } = toCanvas(0, 0);
+  valid.forEach((p, i) => { const {px,py} = toC(p.x, p.y); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+  // Close back to origin along x-axis
+  const {px: lastPx} = toC(valid[valid.length - 1].x, 0);
+  const {py: basePy} = toC(0, 0);
   ctx.lineTo(lastPx, basePy);
-  ctx.lineTo(margin.left, basePy);
+  ctx.lineTo(m.left, basePy);
   ctx.closePath();
-  ctx.fillStyle = "rgba(39,174,96,0.08)";
-  ctx.fill();
+  ctx.fillStyle = "rgba(39,174,96,0.09)"; ctx.fill();
+
+  // --- Capacity curve line ---
+  ctx.beginPath();
+  valid.forEach((p, i) => { const {px,py} = toC(p.x, p.y); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+  ctx.strokeStyle = "#27ae60"; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.stroke();
 
   // --- Demand point ---
-  const { px: dpx, py: dpy } = toCanvas(Math.abs(Mu), Pu);
-  ctx.beginPath();
-  ctx.arc(dpx, dpy, 6, 0, 2 * Math.PI);
-  ctx.fillStyle = COLOR.point;
-  ctx.fill();
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  const {px:dpx, py:dpy} = toC(Math.abs(Mu), Pu);
+  ctx.beginPath(); ctx.arc(dpx, dpy, 6, 0, 2*Math.PI);
+  ctx.fillStyle = COLOR.point; ctx.fill();
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+
+  ctx.restore(); // release clip
 
   // --- Axis labels ---
-  ctx.fillStyle = COLOR.text;
-  ctx.font = "bold 10px 'Courier New', monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("Mn (kNm)", margin.left + plotW / 2, H - 4);
+  ctx.fillStyle = COLOR.text; ctx.font = "bold 10px 'Courier New',monospace"; ctx.textAlign = "center";
+  ctx.fillText("Mn (kNm)", m.left + pW / 2, H - 4);
+  ctx.save(); ctx.translate(12, m.top + pH / 2); ctx.rotate(-Math.PI/2);
+  ctx.fillText("Pn (kN)", 0, 0); ctx.restore();
+
+  // --- Tick values ---
+  ctx.font = "9px 'Courier New',monospace"; ctx.fillStyle = "#999";
+  for (let i = 0; i <= 4; i++) {
+    const {px} = toC(maxX/4*i, 0); const {py} = toC(0, maxY/4*i);
+    ctx.textAlign = "center"; ctx.fillText((maxX/4*i).toFixed(0), px, m.top+pH+14);
+    ctx.textAlign = "right";  ctx.fillText((maxY/4*i).toFixed(0), m.left-4, py+3);
+  }
+}
+
+// =============================================================================
+// SLAB SECTION (FIX-03)
+// =============================================================================
+
+/**
+ * Draws a slab cross-section showing thickness, cover, bar layer,
+ * and key dimension callouts.
+ *
+ * @param {string} canvasId  - Target <canvas> ID.
+ * @param {number} h         - Slab thickness (mm).
+ * @param {number} db        - Bar diameter (mm).
+ * @param {number} cover     - Clear cover (mm).
+ * @param {number} spacing   - Bar spacing (mm) — used in label only.
+ * @param {number} spanMm    - Span in mm — used in label only.
+ */
+function drawSlabSection(canvasId, h, db, cover, spacing, spanMm) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx  = canvas.getContext("2d");
+  const W    = canvas.width;
+  const H    = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Layout constants
+  const PAD_H  = 48;   // horizontal padding (room for dim arrows)
+  const PAD_V  = 36;   // vertical padding
+  const slabW  = W - 2 * PAD_H;
+  const SCALE  = Math.min((H - 2 * PAD_V) / h, slabW / 1200);
+  const slabPx = Math.min(slabW, 1200 * SCALE);  // drawn width
+  const slabHpx = h * SCALE;
+
+  const x0 = (W - slabPx) / 2;
+  const y0 = (H - slabHpx) / 2;
+
+  // --- Concrete body ---
+  ctx.fillStyle   = COLOR.concrete;
+  ctx.fillRect(x0, y0, slabPx, slabHpx);
+  ctx.strokeStyle = COLOR.border;
+  ctx.lineWidth   = 1.5;
+  ctx.strokeRect(x0, y0, slabPx, slabHpx);
+
+  // --- Hatch pattern on concrete (cross-section convention) ---
   ctx.save();
-  ctx.translate(12, margin.top + plotH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText("Pn (kN)", 0, 0);
+  ctx.strokeStyle = "rgba(0,0,0,0.08)";
+  ctx.lineWidth   = 1;
+  const HATCH = 14;
+  for (let hx = x0; hx < x0 + slabPx; hx += HATCH) {
+    ctx.beginPath(); ctx.moveTo(hx, y0); ctx.lineTo(hx + slabHpx, y0 + slabHpx); ctx.stroke();
+  }
   ctx.restore();
 
-  // --- Axis tick values ---
-  ctx.font = "9px 'Courier New', monospace";
-  ctx.fillStyle = "#888";
-  for (let i = 0; i <= 4; i++) {
-    const xVal = (maxX / 4) * i;
-    const yVal = (maxY / 4) * i;
-    const { px } = toCanvas(xVal, 0);
-    const { py } = toCanvas(0, yVal);
-    ctx.textAlign = "center";
-    ctx.fillText(xVal.toFixed(0), px, margin.top + plotH + 14);
-    ctx.textAlign = "right";
-    ctx.fillText(yVal.toFixed(0), margin.left - 4, py + 3);
+  // --- Cover zone indicator ---
+  const coverPx = cover * SCALE;
+  const barRad  = Math.max((db / 2) * SCALE, 4);
+  const barY    = y0 + slabHpx - coverPx - barRad;
+
+  // Dotted cover line
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = "rgba(41,128,185,0.5)";
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(x0, barY + barRad + coverPx);
+  ctx.lineTo(x0 + slabPx, barY + barRad + coverPx);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // --- Reinforcing bars (evenly spaced across width) ---
+  const barCount   = Math.max(3, Math.min(8, Math.floor(slabPx / Math.max(spacing * SCALE, 30))));
+  const barSpacePx = slabPx / (barCount + 1);
+
+  ctx.fillStyle = COLOR.bar;
+  for (let i = 1; i <= barCount; i++) {
+    const bx = x0 + i * barSpacePx;
+    ctx.beginPath();
+    ctx.arc(bx, barY, barRad, 0, 2 * Math.PI);
+    ctx.fill();
   }
+
+  // --- Dimension lines ---
+  ctx.strokeStyle = "#555";
+  ctx.fillStyle   = "#555";
+  ctx.lineWidth   = 1;
+  ctx.font        = "bold 10px 'Courier New', monospace";
+  ctx.textAlign   = "right";
+
+  // Height arrow (left side)
+  const arrowX = x0 - 14;
+  _dimArrow(ctx, arrowX, y0, arrowX, y0 + slabHpx);
+  ctx.save();
+  ctx.translate(arrowX - 6, y0 + slabHpx / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.fillText(`h = ${h} mm`, 0, 0);
+  ctx.restore();
+
+  // Cover dimension (right side small arrow)
+  const covX = x0 + slabPx + 14;
+  _dimArrow(ctx, covX, barY + barRad, covX, y0 + slabHpx);
+  ctx.textAlign = "left";
+  ctx.font      = "9px 'Courier New', monospace";
+  ctx.fillStyle = "#2980b9";
+  ctx.fillText(`cover=${cover}`, covX + 5, barY + barRad + coverPx / 2 + 3);
+
+  // --- Labels ---
+  ctx.fillStyle   = "#333";
+  ctx.font        = "bold 10px 'Courier New', monospace";
+  ctx.textAlign   = "center";
+
+  // Bar label
+  ctx.fillStyle = COLOR.bar;
+  ctx.fillText(`${db}mm Ø @ ${spacing}mm`, W / 2, y0 + slabHpx + 18);
+
+  // Span label at top
+  ctx.fillStyle = COLOR.text;
+  ctx.font      = "9px 'Courier New', monospace";
+  if (spanMm > 0) ctx.fillText(`Span = ${(spanMm / 1000).toFixed(2)} m`, W / 2, y0 - 10);
+}
+
+/**
+ * Internal: draws a dimension arrow between two points.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x1 @param {number} y1  Start point
+ * @param {number} x2 @param {number} y2  End point
+ */
+function _dimArrow(ctx, x1, y1, x2, y2) {
+  const TICK = 5;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.stroke();
+  // Tick marks
+  ctx.beginPath(); ctx.moveTo(x1 - TICK, y1); ctx.lineTo(x1 + TICK, y1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2 - TICK, y2); ctx.lineTo(x2 + TICK, y2); ctx.stroke();
 }

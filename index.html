@@ -4,236 +4,789 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="Structural Design Suite — Beam, Column, and Slab calculations per NSCP 2015 and ACI 318-14" />
-  <title>Structural Design Suite</title>
+  <title>Structural Design Suite | NSCP 2015</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" />
+  
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
 
 <!-- ============================================================
-     HEADER
-     Populated by main.js from config.js (PROJECT_DETAILS)
+     DASHBOARD CONTAINER
      ============================================================ -->
-<header>
-  <div class="header-content">
-    <div>
-      <div class="app-title">Structural Suite</div>
-      <div class="app-subtitle">NSCP 2015 &nbsp;/&nbsp; ACI 318-14 &nbsp;·&nbsp; Zone 4 Ready</div>
-    </div>
-    <div class="student-info">
-      <div class="info-row">
-        <span class="info-label">Project</span>
-        <span id="display-project" class="info-val">…</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Name</span>
-        <span id="display-name" class="info-val">…</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Subject</span>
-        <span id="display-subject" class="info-val">…</span>
-      </div>
-    </div>
-  </div>
-</header>
+<div class="dashboard-container">
 
-<!-- ============================================================
-     NAVIGATION
-     onclick passes the event for tab-button highlighting
-     ============================================================ -->
-<nav>
-  <button class="active" onclick="switchTab('beam', event)">Beam</button>
-  <button onclick="switchTab('column', event)">Column</button>
-  <button onclick="switchTab('slab', event)">Slab</button>
-</nav>
-
-<!-- ============================================================
-     MAIN CONTENT
-     ============================================================ -->
-<main>
-
-  <!-- ==================== BEAM MODULE ==================== -->
-  <section id="beam" class="module active">
-    <h2>Beam Design Module</h2>
-
-    <div class="form-group" style="margin-bottom: 1.5rem;">
-      <label>Design Type</label>
-      <select id="b_type" onchange="toggleBeamType()">
-        <option value="singly">Singly Reinforced</option>
-        <option value="doubly">Doubly Reinforced</option>
-      </select>
-    </div>
-
-    <h3>1. Geometry &amp; Materials</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>Width b (mm)</label><input type="number" id="b_b" value="300" min="100"></div>
-      <div class="form-group"><label>Depth h (mm)</label><input type="number" id="b_h" value="500" min="150"></div>
-      <div class="form-group"><label>Clear Cover (mm)</label><input type="number" id="b_cc" value="40" min="20"></div>
-      <div class="form-group"><label>fc' (MPa)</label><input type="number" id="b_fc" value="28" min="17"></div>
-      <div class="form-group"><label>Main fy (MPa)</label><input type="number" id="b_fy" value="414" min="230"></div>
-      <div class="form-group"><label>Stirrup fyt (MPa)</label><input type="number" id="b_fyt" value="275" min="230"></div>
-    </div>
-
-    <h3>2. Tension Reinforcement</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>No. of Bars (N)</label><input type="number" id="b_n" value="4" min="2"></div>
-      <div class="form-group"><label>Bar Diameter (mm)</label><input type="number" id="b_db" value="20" min="10"></div>
-      <div class="form-group"><label>Stirrup Diameter (mm)</label><input type="number" id="b_ds" value="10" min="8"></div>
-      <div class="form-group">
-        <label>Bar Layers</label>
-        <select id="b_layers">
-          <option value="1">1 Layer</option>
-          <option value="2">2 Layers</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Compression steel — hidden unless Doubly Reinforced selected -->
-    <div id="beam-comp-group" style="display: none;">
-      <h3>3. Compression Reinforcement</h3>
-      <div class="input-grid">
-        <div class="form-group"><label>Comp. Bars (N')</label><input type="number" id="b_np" value="2" min="2"></div>
-        <div class="form-group"><label>Comp. Bar Diameter (mm)</label><input type="number" id="b_dbp" value="20" min="10"></div>
-        <div class="form-group"><label>Dist. to Top d' (mm)</label><input type="number" id="b_dp" value="65" min="40"></div>
-      </div>
-    </div>
-
-    <h3>4. Loads &amp; Span</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>Factored Moment Mu (kNm)</label><input type="number" id="b_Mu" value="150" min="0"></div>
-      <div class="form-group"><label>Factored Shear Vu (kN)</label><input type="number" id="b_Vu" value="100" min="0"></div>
-      <div class="form-group"><label>Torsion Tu (kNm)</label><input type="number" id="b_Tu" value="0" min="0"></div>
-      <div class="form-group"><label>Span Length (m)</label><input type="number" id="b_L" value="6.0" min="1" step="0.1"></div>
-      <div class="form-group">
-        <label>Support Type</label>
-        <select id="b_supp">
-          <option value="1">Simply Supported (L/16)</option>
-          <option value="2">One End Continuous (L/18.5)</option>
-          <option value="3">Both Ends Continuous (L/21)</option>
-          <option value="4">Cantilever (L/8)</option>
-        </select>
-      </div>
-    </div>
-
-    <button class="btn-calc" onclick="calculateBeam()">Analyze Beam</button>
-    <div id="beam-results" class="results-box"></div>
-  </section>
-
-  <!-- ==================== COLUMN MODULE ==================== -->
-  <section id="column" class="module">
-    <h2>Column Design Module</h2>
-
-    <h3>1. Geometry</h3>
-    <div class="input-grid">
-      <div class="form-group">
-        <label>Shape</label>
-        <select id="c_shape" onchange="toggleColInputs()">
-          <option value="rect">Rectangular</option>
-          <option value="circ">Circular</option>
-        </select>
-      </div>
-      <div class="form-group" id="c_b_grp"><label>Width b (mm)</label><input type="number" id="c_b" value="400" min="200"></div>
-      <div class="form-group" id="c_h_grp"><label>Depth h (mm)</label><input type="number" id="c_h" value="400" min="200"></div>
-      <div class="form-group" id="c_D_grp" style="display: none;"><label>Diameter D (mm)</label><input type="number" id="c_D" value="400" min="200"></div>
-      <div class="form-group"><label>Clear Cover (mm)</label><input type="number" id="c_cc" value="40" min="20"></div>
-    </div>
-
-    <h3>2. Materials &amp; Reinforcement</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>fc' (MPa)</label><input type="number" id="c_fc" value="28" min="17"></div>
-      <div class="form-group"><label>fy (MPa)</label><input type="number" id="c_fy" value="415" min="230"></div>
-      <div class="form-group"><label>Total Bars</label><input type="number" id="c_nb" value="8" min="4"></div>
-      <div class="form-group"><label>Bar Diameter (mm)</label><input type="number" id="c_db" value="20" min="12"></div>
-      <div class="form-group">
-        <label>Tie Type</label>
-        <select id="c_tie">
-          <option value="tied">Tied</option>
-          <option value="spiral">Spiral</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Tie/Spiral Diameter (mm)</label><input type="number" id="c_dt" value="10" min="8"></div>
-    </div>
-
-    <h3>3. Loads &amp; Slenderness</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>Factored Axial Pu (kN)</label><input type="number" id="c_Pu" value="1000" min="0"></div>
-      <div class="form-group"><label>Factored Moment Mu (kNm)</label><input type="number" id="c_M2" value="150" min="0"></div>
-      <div class="form-group"><label>Unbraced Length Lu (m)</label><input type="number" id="c_Lu" value="3.0" min="0.5" step="0.1"></div>
-      <div class="form-group">
-        <label>Sway Frame?</label>
-        <select id="c_sway">
-          <option value="0">No (Non-Sway)</option>
-          <option value="1">Yes (Sway)</option>
-        </select>
-      </div>
-    </div>
-
-    <button class="btn-calc" onclick="calculateColumn()">Analyze &amp; Plot P-M Curve</button>
-    <div id="col-results" class="results-box"></div>
-  </section>
-
-  <!-- ==================== SLAB MODULE ==================== -->
-  <section id="slab" class="module">
-    <h2>Slab Design Module</h2>
-
-    <div class="form-group" style="margin-bottom: 1.5rem;">
-      <label>Design Method</label>
-      <select id="s_mode" onchange="toggleSlabInputs()">
-        <option value="1">One-Way Slab</option>
-        <option value="2">Two-Way Flat Plate</option>
-      </select>
-    </div>
-
-    <h3>Materials &amp; Loading</h3>
-    <div class="input-grid">
-      <div class="form-group"><label>fc' (MPa)</label><input type="number" id="s_fc" value="21" min="17"></div>
-      <div class="form-group"><label>fy (MPa)</label><input type="number" id="s_fy" value="275" min="230"></div>
-      <div class="form-group"><label>Thickness h (mm)</label><input type="number" id="s_h" value="125" min="75"></div>
-      <div class="form-group"><label>Bar Diameter (mm)</label><input type="number" id="s_db" value="10" min="8"></div>
-      <div class="form-group"><label>SDL (kPa)</label><input type="number" id="s_DL" value="1.5" min="0" step="0.1"></div>
-      <div class="form-group"><label>Live Load LL (kPa)</label><input type="number" id="s_LL" value="1.9" min="0" step="0.1"></div>
-    </div>
-
-    <!-- One-Way inputs -->
-    <div id="slab-oneway">
-      <h3>Span &amp; Support</h3>
-      <div class="input-grid">
-        <div class="form-group"><label>Span Length (m)</label><input type="number" id="s_L" value="3.0" min="1" step="0.1"></div>
-        <div class="form-group">
-          <label>Support Condition</label>
-          <select id="s_supp">
-            <option value="0.125">Simply Supported (1/8)</option>
-            <option value="0.10">Continuous (1/10)</option>
-          </select>
+  <!-- ============================================================
+       SIDEBAR NAVIGATION
+       ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+    
+    <!-- Brand Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">S</div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-title">Structural Suite</div>
+          <div class="sidebar-subtitle">NSCP 2015 · ACI 318-14</div>
         </div>
       </div>
     </div>
 
-    <!-- Two-Way inputs -->
-    <div id="slab-twoway" style="display: none;">
-      <h3>Panel Geometry</h3>
-      <div class="input-grid">
-        <div class="form-group"><label>Short Span Lx (m)</label><input type="number" id="s_Lx" value="3.0" min="1" step="0.1"></div>
-        <div class="form-group"><label>Column Width c (mm)</label><input type="number" id="s_col_w" value="400" min="200"></div>
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Modules</div>
+        
+        <button class="nav-item active" onclick="switchModule('beam', event)">
+          <span class="nav-item-icon">📊</span>
+          <span class="nav-item-text">Beam Design</span>
+        </button>
+        
+        <button class="nav-item" onclick="switchModule('column', event)">
+          <span class="nav-item-icon">⬜</span>
+          <span class="nav-item-text">Column Design</span>
+        </button>
+        
+        <button class="nav-item" onclick="switchModule('slab', event)">
+          <span class="nav-item-icon">▭</span>
+          <span class="nav-item-text">Slab Design</span>
+        </button>
       </div>
-      <h4>Moment Coefficients (NSCP/ACI)</h4>
-      <div class="input-grid">
-        <div class="form-group"><label>Short Neg. Coef.</label><input type="number" id="s_cn_s" value="0.0" step="0.001"></div>
-        <div class="form-group"><label>Short Pos. Coef.</label><input type="number" id="s_cp_s" value="0.05" step="0.001"></div>
-        <div class="form-group"><label>Long Neg. Coef.</label><input type="number" id="s_cn_l" value="0.0" step="0.001"></div>
-        <div class="form-group"><label>Long Pos. Coef.</label><input type="number" id="s_cp_l" value="0.05" step="0.001"></div>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <span class="sidebar-toggle-icon">◀</span>
+        <span class="sidebar-toggle-text">Collapse</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <div class="main-content">
+
+    <!-- ============================================================
+         TOPBAR
+         ============================================================ -->
+    <div class="topbar">
+      
+      <!-- Left: Page Title -->
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">Beam Design</h1>
+      </div>
+
+      <!-- Right: Unit Toggle + Project Info -->
+      <div class="topbar-right">
+        
+      <!--  Unit Toggle
+        <div class="unit-toggle-container">
+          <span class="unit-label active" id="label-metric">Metric</span>
+          <div class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">
+            <div class="unit-toggle-slider"></div>
+          </div>
+          <span class="unit-label" id="label-english">English</span>
+        </div>
+
+       -->
+
+        <!-- Project Info -->
+        <div class="project-info">
+          <div class="project-info-row">
+            <span class="project-info-label">Project</span>
+            <span class="project-info-value" id="display-project">…</span>
+          </div>
+          <div class="project-info-row">
+            <span class="project-info-label">Name</span>
+            <span class="project-info-value" id="display-name">…</span>
+          </div>
+          <div class="project-info-row">
+            <span class="project-info-label">Subject</span>
+            <span class="project-info-value" id="display-subject">…</span>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <button class="btn-calc" onclick="calculateSlab()">Analyze Slab</button>
-    <div id="slab-results" class="results-box"></div>
-  </section>
+    <!-- ============================================================
+         CONTENT AREA
+         ============================================================ -->
+    <div class="content-area">
 
-</main>
+      <!-- ==================== BEAM MODULE ==================== -->
+      <section class="module active" id="beam">
+
+        <!-- Module Header with Reset -->
+        <div class="module-header">
+          <h2>Beam Design Module</h2>
+          <button class="btn-reset" onclick="resetModule('beam')" title="Reset all beam inputs to defaults">↺ Reset</button>
+        </div>
+
+        <!-- Material Presets -->
+        <div class="preset-group">
+          <div class="preset-header">
+            <span class="preset-icon">🏗️</span>
+            <div class="preset-title">Material Presets</div>
+            <div class="preset-subtitle">Philippine Standards</div>
+          </div>
+          <div class="preset-grid">
+            <div class="form-group">
+              <label class="form-label">Concrete Strength</label>
+              <select class="form-select" id="concrete-preset-beam" onchange="applyConcretePreset('beam')">
+                <option value="">-- Select Preset --</option>
+                <option value="21">21 MPa (Standard)</option>
+                <option value="28">28 MPa (Common)</option>
+                <option value="35">35 MPa (High-Strength)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rebar Grade</label>
+              <select class="form-select" id="rebar-preset-beam" onchange="applyRebarPreset('beam')">
+                <option value="">-- Select Preset --</option>
+                <option value="230">Grade 33 (230 MPa)</option>
+                <option value="275">Grade 40 (275 MPa)</option>
+                <option value="414">Grade 60 (414 MPa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Design Type Selector -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">Design Type</div>
+          </div>
+          <div class="input-grid" style="grid-template-columns: 1fr;">
+            <div class="form-group">
+              <label class="form-label">Reinforcement Type</label>
+              <select class="form-select" id="b_type" onchange="toggleBeamType()">
+                <option value="singly">Singly Reinforced</option>
+                <option value="doubly">Doubly Reinforced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Geometry & Materials -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">1</span>
+              Geometry &amp; Materials
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Width b
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_b" value="300" min="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Depth h
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_h" value="500" min="150">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Clear Cover
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_cc" value="40" min="20">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                fc'
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="b_fc" value="28" min="17">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Main fy
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="b_fy" value="414" min="230">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Stirrup fyt
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="b_fyt" value="275" min="230">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Tension Reinforcement -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">2</span>
+              Tension Reinforcement
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">No. of Bars (N)</label>
+              <input type="number" class="form-input" id="b_n" value="4" min="2">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Bar Diameter
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_db" value="20" min="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Stirrup Diameter
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_ds" value="10" min="8">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bar Layers</label>
+              <select class="form-select" id="b_layers">
+                <option value="1">1 Layer</option>
+                <option value="2">2 Layers</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Compression Reinforcement (Doubly) -->
+        <div class="section-card" id="beam-comp-group" style="display:none;">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">3</span>
+              Compression Reinforcement
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">Comp. Bars (N')</label>
+              <input type="number" class="form-input" id="b_np" value="2" min="2">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Comp. Bar Ø
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_dbp" value="20" min="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Dist. to Top d'
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_dp" value="65" min="40">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Loads & Span -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">4</span>
+              Loads &amp; Span
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Factored Moment Mu
+                <span class="field-unit" data-unit-type="moment">(kNm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_Mu" value="150" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Factored Shear Vu
+                <span class="field-unit" data-unit-type="force">(kN)</span>
+              </label>
+              <input type="number" class="form-input" id="b_Vu" value="100" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Torsion Tu
+                <span class="field-unit" data-unit-type="moment">(kNm)</span>
+              </label>
+              <input type="number" class="form-input" id="b_Tu" value="0" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Span Length
+                <span class="field-unit" data-unit-type="length_m">(m)</span>
+              </label>
+              <input type="number" class="form-input" id="b_L" value="6.0" min="1" step="0.1">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Support Type</label>
+              <select class="form-select" id="b_supp">
+                <option value="1">Simply Supported (L/16)</option>
+                <option value="2">One End Continuous (L/18.5)</option>
+                <option value="3">Both Ends Continuous (L/21)</option>
+                <option value="4">Cantilever (L/8)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <button class="btn btn-primary btn-lg" onclick="calculateBeam()">
+          <span class="btn-icon">🔍</span>
+          Analyze Beam
+        </button>
+
+        <!-- Results Card -->
+        <div id="beam-results" class="results-card" style="display:none;"></div>
+
+      </section>
+
+      <!-- ==================== COLUMN MODULE ==================== -->
+      <section class="module" id="column">
+
+        <!-- Module Header with Reset -->
+        <div class="module-header">
+          <h2>Column Design Module</h2>
+          <button class="btn-reset" onclick="resetModule('column')" title="Reset all column inputs to defaults">↺ Reset</button>
+        </div>
+
+        <!-- Material Presets -->
+        <div class="preset-group">
+          <div class="preset-header">
+            <span class="preset-icon">🏗️</span>
+            <div class="preset-title">Material Presets</div>
+            <div class="preset-subtitle">Philippine Standards</div>
+          </div>
+          <div class="preset-grid">
+            <div class="form-group">
+              <label class="form-label">Concrete Strength</label>
+              <select class="form-select" id="concrete-preset-column" onchange="applyConcretePreset('column')">
+                <option value="">-- Select Preset --</option>
+                <option value="21">21 MPa (Standard)</option>
+                <option value="28">28 MPa (Common)</option>
+                <option value="35">35 MPa (High-Strength)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rebar Grade</label>
+              <select class="form-select" id="rebar-preset-column" onchange="applyRebarPreset('column')">
+                <option value="">-- Select Preset --</option>
+                <option value="230">Grade 33 (230 MPa)</option>
+                <option value="275">Grade 40 (275 MPa)</option>
+                <option value="415">Grade 60 (415 MPa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Geometry -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">1</span>
+              Geometry
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">Shape</label>
+              <select class="form-select" id="c_shape" onchange="toggleColInputs()">
+                <option value="rect">Rectangular</option>
+                <option value="circ">Circular</option>
+              </select>
+            </div>
+            <div class="form-group" id="c_b_grp">
+              <label class="form-label">
+                Width b
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_b" value="400" min="200">
+            </div>
+            <div class="form-group" id="c_h_grp">
+              <label class="form-label">
+                Depth h
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_h" value="400" min="200">
+            </div>
+            <div class="form-group" id="c_D_grp" style="display:none;">
+              <label class="form-label">
+                Diameter D
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_D" value="400" min="200">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Clear Cover
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_cc" value="40" min="20">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Materials & Reinforcement -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">2</span>
+              Materials &amp; Reinforcement
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                fc'
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="c_fc" value="28" min="17">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                fy
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="c_fy" value="415" min="230">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Bars</label>
+              <input type="number" class="form-input" id="c_nb" value="8" min="4">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Bar Diameter
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_db" value="20" min="12">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tie Type</label>
+              <select class="form-select" id="c_tie">
+                <option value="tied">Tied</option>
+                <option value="spiral">Spiral</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Tie/Spiral Ø
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_dt" value="10" min="8">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Loads & Slenderness -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">3</span>
+              Loads &amp; Slenderness
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Factored Axial Pu
+                <span class="field-unit" data-unit-type="force">(kN)</span>
+              </label>
+              <input type="number" class="form-input" id="c_Pu" value="1000" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Factored Moment Mu
+                <span class="field-unit" data-unit-type="moment">(kNm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_M2" value="150" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Unbraced Length Lu
+                <span class="field-unit" data-unit-type="length_m">(m)</span>
+              </label>
+              <input type="number" class="form-input" id="c_Lu" value="3.0" min="0.5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sway Frame?</label>
+              <select class="form-select" id="c_sway">
+                <option value="0">No (Non-Sway)</option>
+                <option value="1">Yes (Sway)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <button class="btn btn-primary btn-lg" onclick="calculateColumn()">
+          <span class="btn-icon">🔍</span>
+          Analyze &amp; Plot P-M Curve
+        </button>
+
+        <!-- Results Card -->
+        <div id="col-results" class="results-card" style="display:none;"></div>
+
+      </section>
+
+      <!-- ==================== SLAB MODULE ==================== -->
+      <section class="module" id="slab">
+
+        <!-- Module Header with Reset -->
+        <div class="module-header">
+          <h2>Slab Design Module</h2>
+          <button class="btn-reset" onclick="resetModule('slab')" title="Reset all slab inputs to defaults">↺ Reset</button>
+        </div>
+
+        <!-- Material Presets -->
+        <div class="preset-group">
+          <div class="preset-header">
+            <span class="preset-icon">🏗️</span>
+            <div class="preset-title">Material Presets</div>
+            <div class="preset-subtitle">Philippine Standards</div>
+          </div>
+          <div class="preset-grid">
+            <div class="form-group">
+              <label class="form-label">Concrete Strength</label>
+              <select class="form-select" id="concrete-preset-slab" onchange="applyConcretePreset('slab')">
+                <option value="">-- Select Preset --</option>
+                <option value="21">21 MPa (Standard)</option>
+                <option value="28">28 MPa (Common)</option>
+                <option value="35">35 MPa (High-Strength)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rebar Grade</label>
+              <select class="form-select" id="rebar-preset-slab" onchange="applyRebarPreset('slab')">
+                <option value="">-- Select Preset --</option>
+                <option value="230">Grade 33 (230 MPa)</option>
+                <option value="275">Grade 40 (275 MPa)</option>
+                <option value="414">Grade 60 (414 MPa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Design Method Selector -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">Design Method</div>
+          </div>
+          <div class="input-grid" style="grid-template-columns: 1fr;">
+            <div class="form-group">
+              <label class="form-label">Slab Type</label>
+              <select class="form-select" id="s_mode" onchange="toggleSlabInputs()">
+                <option value="1">One-Way Slab</option>
+                <option value="2">Two-Way Flat Plate</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Materials & Loading -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">1</span>
+              Materials &amp; Loading
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                fc'
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="s_fc" value="21" min="17">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                fy
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="s_fy" value="275" min="230">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Thickness h
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="s_h" value="125" min="75">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Bar Diameter
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="s_db" value="10" min="8">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                SDL
+                <span class="field-unit" data-unit-type="pressure">(kPa)</span>
+              </label>
+              <input type="number" class="form-input" id="s_DL" value="1.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Live Load LL
+                <span class="field-unit" data-unit-type="pressure">(kPa)</span>
+              </label>
+              <input type="number" class="form-input" id="s_LL" value="1.9" min="0" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <!-- One-Way Slab Inputs -->
+        <div id="slab-oneway">
+          <div class="section-card">
+            <div class="section-header">
+              <div class="section-title">
+                <span class="section-number">2</span>
+                Span &amp; Support
+              </div>
+            </div>
+            <div class="input-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  Span Length
+                  <span class="field-unit" data-unit-type="length_m">(m)</span>
+                </label>
+                <input type="number" class="form-input" id="s_L" value="3.0" min="1" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Support Condition</label>
+                <select class="form-select" id="s_supp">
+                  <option value="0.125">Simply Supported (L/8)</option>
+                  <option value="0.10">Continuous (L/10)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-Way Slab Inputs -->
+        <div id="slab-twoway" style="display:none;">
+          <div class="section-card">
+            <div class="section-header">
+              <div class="section-title">
+                <span class="section-number">2</span>
+                Panel Geometry
+              </div>
+            </div>
+            <div class="input-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  Short Span Lx
+                  <span class="field-unit" data-unit-type="length_m">(m)</span>
+                </label>
+                <input type="number" class="form-input" id="s_Lx" value="3.0" min="1" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  Long Span Ly
+                  <span class="field-unit" data-unit-type="length_m">(m)</span>
+                </label>
+                <input type="number" class="form-input" id="s_Ly" value="4.0" min="1" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  Column Width c
+                  <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+                </label>
+                <input type="number" class="form-input" id="s_col_w" value="400" min="200">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Edge Condition</label>
+                <select class="form-select" id="s_edge_cond" onchange="updateSlabCoefficients()">
+                  <option value="interior">Interior Panel</option>
+                  <option value="one_edge">One Edge Discontinuous</option>
+                  <option value="two_edge">Two Adjacent Edges Discont.</option>
+                  <option value="corner">Corner Panel</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACI Coefficient Helper -->
+          <div class="aci-helper-box">
+            <div class="aci-helper-header">
+              <span class="aci-helper-icon">📋</span>
+              <div class="aci-helper-title">ACI 318-14 Table 8.10.3.1 Helper</div>
+            </div>
+            <div class="aci-helper-text">
+              Auto-populate moment coefficients based on aspect ratio <strong>β = Ly/Lx</strong> and edge condition.
+            </div>
+            <button type="button" class="btn-aci-load" onclick="loadACICoefficients()">
+              Load from ACI Table 8.10.3.1
+            </button>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <div class="section-title">
+                <span class="section-number">3</span>
+                Moment Coefficients
+              </div>
+            </div>
+            <div class="input-grid">
+              <div class="form-group">
+                <label class="form-label">Short Neg. (−) Coef.</label>
+                <input type="number" class="form-input" id="s_cn_s" value="0.045" min="0" max="1" step="0.001">
+                <span class="field-hint">Interior support</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Short Pos. (+) Coef.</label>
+                <input type="number" class="form-input" id="s_cp_s" value="0.036" min="0" max="1" step="0.001">
+                <span class="field-hint">Midspan</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Long Neg. (−) Coef.</label>
+                <input type="number" class="form-input" id="s_cn_l" value="0.032" min="0" max="1" step="0.001">
+                <span class="field-hint">Interior support</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Long Pos. (+) Coef.</label>
+                <input type="number" class="form-input" id="s_cp_l" value="0.026" min="0" max="1" step="0.001">
+                <span class="field-hint">Midspan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <button class="btn btn-primary btn-lg" onclick="calculateSlab()">
+          <span class="btn-icon">🔍</span>
+          Analyze Slab
+        </button>
+
+        <!-- Results Card -->
+        <div id="slab-results" class="results-card" style="display:none;"></div>
+
+      </section>
+
+    </div>
+  </div>
+
+</div>
 
 <!-- ============================================================
-     SCRIPTS — load order matters:
-     config → utils → canvas → beam → column → slab → main
+     SCRIPTS
      ============================================================ -->
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
