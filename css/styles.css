@@ -1,0 +1,579 @@
+/*
+ * styles.css
+ * Structural Design Suite — NSCP 2015 / ACI 318-14
+ * University of Mindanao Color Palette
+ *
+ * Sections:
+ *   1. CSS Variables & Reset
+ *   2. Layout (Header, Nav, Main)
+ *   3. Form Elements
+ *   4. Calculation Controls
+ *   5. Result Display
+ *   6. Canvas & Chart Cards
+ *   7. Tables
+ *   8. Responsive
+ *   9. Animations
+ */
+
+/* =============================================================================
+   1. CSS VARIABLES & RESET
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap');
+
+:root {
+  /* University of Mindanao palette */
+  --primary:       #800000;
+  --primary-dark:  #580000;
+  --primary-light: #9a1515;
+  --accent:        #FFD700;
+  --accent-dim:    #e6c000;
+
+  /* Neutrals */
+  --bg:            #f0eeec;
+  --surface:       #ffffff;
+  --surface-2:     #f7f5f3;
+  --border:        #ddd9d4;
+  --border-light:  #eceae7;
+  --text:          #1a1a1a;
+  --text-muted:    #6b6560;
+
+  /* Status */
+  --success:  #1f7a45;
+  --danger:   #b32a2a;
+  --warning:  #c07a00;
+  --info:     #1e5799;
+
+  /* Spacing */
+  --radius:   5px;
+  --shadow:   0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-sm:0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   2. LAYOUT — HEADER
+   ============================================================================= */
+
+header {
+  background:    linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color:         white;
+  padding:       1.6rem 2rem;
+  border-bottom: 5px solid var(--accent);
+  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.18);
+  position:      relative;
+  overflow:      hidden;
+}
+
+/* Subtle texture overlay */
+header::after {
+  content:          "";
+  position:         absolute;
+  inset:            0;
+  background:       repeating-linear-gradient(
+                      -45deg,
+                      rgba(255,255,255,0.015) 0px,
+                      rgba(255,255,255,0.015) 1px,
+                      transparent 1px,
+                      transparent 8px
+                    );
+  pointer-events:   none;
+}
+
+.header-content {
+  max-width:      960px;
+  margin:         0 auto;
+  display:        flex;
+  justify-content:space-between;
+  align-items:    center;
+  flex-wrap:      wrap;
+  gap:            1.5rem;
+  position:       relative;
+  z-index:        1;
+}
+
+.app-title {
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      1.7rem;
+  font-weight:    600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color:          white;
+}
+
+.app-subtitle {
+  font-size:   0.78rem;
+  margin-top:  6px;
+  color:       var(--accent);
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Identity card */
+.student-info {
+  background:   rgba(0, 0, 0, 0.28);
+  padding:      12px 18px;
+  border-radius:var(--radius);
+  border-left:  4px solid var(--accent);
+  font-size:    0.88rem;
+  min-width:    220px;
+  backdrop-filter: blur(4px);
+}
+
+.info-row {
+  display:      flex;
+  align-items:  baseline;
+  margin-bottom:4px;
+}
+
+.info-row:last-child { margin-bottom: 0; }
+
+.info-label {
+  color:          var(--accent);
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      0.7rem;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width:          68px;
+  flex-shrink:    0;
+}
+
+.info-val {
+  color:       white;
+  font-weight: 600;
+  font-size:   0.85rem;
+}
+
+/* =============================================================================
+   2b. LAYOUT — NAVIGATION
+   ============================================================================= */
+
+nav {
+  background:  #222;
+  display:     flex;
+  justify-content: center;
+  position:    sticky;
+  top:         0;
+  z-index:     100;
+  box-shadow:  0 2px 8px rgba(0,0,0,0.25);
+}
+
+nav button {
+  background:   none;
+  border:       none;
+  color:        rgba(255,255,255,0.55);
+  padding:      1rem 3rem;
+  cursor:       pointer;
+  font-family:  'IBM Plex Mono', monospace;
+  font-size:    0.82rem;
+  font-weight:  600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 3px solid transparent;
+  transition:   color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+nav button:hover {
+  color:       rgba(255,255,255,0.9);
+  background:  rgba(255,255,255,0.04);
+}
+
+nav button.active {
+  color:        white;
+  border-bottom-color: var(--accent);
+  background:  rgba(255,215,0,0.06);
+}
+
+/* =============================================================================
+   2c. LAYOUT — MAIN CONTENT
+   ============================================================================= */
+
+main {
+  max-width:   960px;
+  margin:      2rem auto;
+  padding:     0 1.25rem 5rem;
+}
+
+.module {
+  display:        none;
+  background:     var(--surface);
+  padding:        2.5rem;
+  border-radius:  var(--radius);
+  box-shadow:     var(--shadow);
+  animation:      fadeInUp 0.35s ease-out;
+  border-top:     4px solid var(--primary);
+}
+
+.module.active { display: block; }
+
+/* =============================================================================
+   3. TYPOGRAPHY — HEADINGS
+   ============================================================================= */
+
+h2 {
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      1.3rem;
+  font-weight:    600;
+  color:          var(--primary);
+  border-bottom:  2px solid var(--border-light);
+  padding-bottom: 0.75rem;
+  margin-bottom:  1.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+h3 {
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      0.78rem;
+  font-weight:    600;
+  color:          var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-left:    3px solid var(--accent);
+  padding-left:   10px;
+  margin:         2rem 0 1rem;
+}
+
+h4 {
+  font-size:   0.85rem;
+  font-weight: 600;
+  color:       var(--text-muted);
+  margin:      1.25rem 0 0.75rem;
+}
+
+/* =============================================================================
+   4. FORM ELEMENTS
+   ============================================================================= */
+
+.input-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap:                   1.25rem;
+  margin-bottom:         1.25rem;
+}
+
+.form-group {
+  display:        flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size:      0.75rem;
+  font-weight:    700;
+  letter-spacing: 0.5px;
+  color:          var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom:  0.4rem;
+}
+
+.form-group input,
+.form-group select {
+  padding:          10px 12px;
+  border:           1.5px solid var(--border);
+  border-radius:    var(--radius);
+  font-family:      'IBM Plex Mono', monospace;
+  font-size:        0.95rem;
+  background-color: var(--surface);
+  color:            var(--text);
+  width:            100%;
+  transition:       border-color 0.2s, box-shadow 0.2s;
+  appearance:       none;
+  -webkit-appearance: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow:   0 0 0 3px rgba(128, 0, 0, 0.10);
+  outline:      none;
+}
+
+.form-group select {
+  background-image:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 10L3 5h10z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat:   no-repeat;
+  background-position: right 10px center;
+  background-size:     14px;
+  padding-right:       30px;
+  cursor:              pointer;
+}
+
+/* =============================================================================
+   5. CALCULATION BUTTON
+   ============================================================================= */
+
+.btn-calc {
+  width:          100%;
+  padding:        1.1rem;
+  background:     var(--primary);
+  color:          white;
+  border:         none;
+  border-radius:  var(--radius);
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      0.9rem;
+  font-weight:    600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor:         pointer;
+  margin-top:     1.75rem;
+  transition:     background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.15s;
+  box-shadow:     0 4px 10px rgba(128,0,0,0.25);
+}
+
+.btn-calc:hover {
+  background: var(--primary-dark);
+  color:      var(--accent);
+  transform:  translateY(-2px);
+  box-shadow: 0 6px 16px rgba(128,0,0,0.30);
+}
+
+.btn-calc:active {
+  transform:  translateY(0);
+  box-shadow: 0 2px 6px rgba(128,0,0,0.20);
+}
+
+/* =============================================================================
+   6. RESULTS BOX
+   ============================================================================= */
+
+.results-box {
+  margin-top:   2.5rem;
+  border:       1px solid var(--border);
+  border-left:  5px solid var(--primary);
+  border-radius:var(--radius);
+  display:      none;
+  overflow:     hidden;
+  box-shadow:   var(--shadow);
+  animation:    fadeInUp 0.3s ease-out;
+}
+
+.result-header {
+  background:  var(--primary);
+  color:       white;
+  padding:     0.85rem 1.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size:   0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.result-body {
+  padding: 1.5rem;
+}
+
+.result-row {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  padding:         0.75rem 0;
+  border-bottom:   1px solid var(--border-light);
+  flex-wrap:       wrap;
+  gap:             8px;
+}
+
+.result-row:last-child { border-bottom: none; }
+
+.result-label {
+  font-size:   0.88rem;
+  font-weight: 600;
+  color:       var(--text-muted);
+}
+
+/* Section divider inside results */
+.section-divider {
+  background:   var(--surface-2);
+  color:        var(--primary);
+  padding:      7px 12px;
+  margin:       1.25rem -1.5rem;
+  font-family:  'IBM Plex Mono', monospace;
+  font-size:    0.72rem;
+  font-weight:  600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-left:  4px solid var(--accent);
+}
+
+/* =============================================================================
+   6b. STATUS TAGS
+   ============================================================================= */
+
+.tag {
+  display:        inline-block;
+  padding:        3px 10px;
+  border-radius:  20px;
+  font-family:    'IBM Plex Mono', monospace;
+  font-size:      0.68rem;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color:          white;
+  white-space:    nowrap;
+}
+
+.tag.pass { background-color: var(--success); }
+.tag.fail { background-color: var(--danger); }
+.tag.warn { background-color: var(--warning); }
+.tag.info { background-color: var(--info); }
+
+/* =============================================================================
+   7. CANVAS & CHART CARDS
+   ============================================================================= */
+
+.chart-wrapper {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       16px;
+  margin:    1.25rem 0 1.5rem;
+}
+
+.chart-card {
+  flex:             1;
+  min-width:        220px;
+  background:       var(--surface-2);
+  border:           1px solid var(--border-light);
+  padding:          16px;
+  border-radius:    var(--radius);
+  text-align:       center;
+}
+
+.chart-title {
+  font-family:    'IBM Plex Mono', monospace;
+  font-weight:    600;
+  font-size:      0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color:          var(--text-muted);
+  margin-bottom:  12px;
+}
+
+canvas {
+  max-width:    100%;
+  height:       auto;
+  border:       1px solid var(--border-light);
+  border-radius:3px;
+  background:   white;
+}
+
+/* Legend */
+.chart-legend {
+  font-size:      0.78rem;
+  margin-top:     10px;
+  color:          var(--text-muted);
+  display:        flex;
+  justify-content:center;
+  gap:            16px;
+  flex-wrap:      wrap;
+}
+
+.legend-item {
+  display:    flex;
+  align-items:center;
+  gap:        6px;
+  font-family:'IBM Plex Mono', monospace;
+}
+
+.dot {
+  width:        9px;
+  height:       9px;
+  border-radius:50%;
+  display:      inline-block;
+  flex-shrink:  0;
+}
+
+/* =============================================================================
+   8. TABLES
+   ============================================================================= */
+
+.table-wrapper {
+  overflow-x:              auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top:              1rem;
+  border:                  1px solid var(--border-light);
+  border-radius:           var(--radius);
+}
+
+table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       0.875rem;
+  min-width:       480px;
+}
+
+th {
+  background:     var(--surface-2);
+  color:          var(--primary);
+  font-family:    'IBM Plex Mono', monospace;
+  font-weight:    600;
+  font-size:      0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding:        10px 14px;
+  text-align:     left;
+  border-bottom:  2px solid var(--border);
+}
+
+td {
+  padding:       10px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color:         var(--text);
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td {
+  background: var(--surface-2);
+}
+
+/* =============================================================================
+   9. RESPONSIVE
+   ============================================================================= */
+
+@media (max-width: 640px) {
+  .app-title        { font-size: 1.25rem; letter-spacing: 1.5px; }
+  .app-subtitle     { font-size: 0.7rem; }
+  .student-info     { min-width: 100%; }
+  nav button        { padding: 0.9rem 0; font-size: 0.72rem; flex: 1; letter-spacing: 1px; }
+  .module           { padding: 1.5rem 1.25rem; }
+  .input-grid       { grid-template-columns: 1fr; gap: 1rem; }
+  .section-divider  { margin-left: -1.25rem; margin-right: -1.25rem; }
+  h2                { font-size: 1.1rem; }
+}
+
+@media (max-width: 400px) {
+  nav button { padding: 0.8rem 0; font-size: 0.65rem; }
+}
+
+/* =============================================================================
+   10. ANIMATIONS
+   ============================================================================= */
+
+@keyframes fadeInUp {
+  from {
+    opacity:   0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity:   1;
+    transform: translateY(0);
+  }
+}
