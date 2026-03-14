@@ -39,7 +39,7 @@ Edit **`js/config.js`** only — nothing else needs to change:
 ```js
 const PROJECT_DETAILS = {
   project: "FINAL PROPOSAL",
-  name:    "STRUCTURAL ENGINEER",
+  name:    "ENGR. JAN FROYD R. ITEM",
   subject: "MEPCE 225",
 };
 ```
@@ -371,4 +371,4 @@ Requires: ES6 (const/let, arrow functions, template literals), Canvas 2D API, lo
 
 ---
 
-*Last updated: Session 5 · 2026 · Engr. Lakatan*
+*Last updated: 2026 · University of Mindanao*
