@@ -39,7 +39,7 @@ Edit **`js/config.js`** only — nothing else needs to change:
 ```js
 const PROJECT_DETAILS = {
   project: "FINAL PROPOSAL",
-  name:    "ENGR. JAN FROYD R. ITEM",
+  name:    "Structural Engineer",
   subject: "MEPCE 225",
 };
 ```
