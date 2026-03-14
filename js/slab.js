@@ -175,7 +175,6 @@ function calculateSlab() {
   let html = `
     <div class="modern-result-header">
       <div class="modern-result-header-content">
-        <div class="modern-result-icon">🏗️</div>
         <div class="modern-result-title">
           <div class="modern-result-main-title">Slab Analysis</div>
           <div class="modern-result-subtitle">${mode === "1" ? "One-Way Slab" : "Two-Way Flat Plate"}</div>
@@ -190,12 +189,11 @@ function calculateSlab() {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📏</span>
       <span class="section-divider-title">Section Properties</span>
     </div>
     <div class="modern-results-grid">`;
   html += createRow("Effective Depth (d)", d.toFixed(1) + " mm",   "");
-  html += createRow("Factored Load (wu)",  wu.toFixed(3) + " kPa", "");
+  html += createRow("Factored Load (w<sub>u</sub>)",  wu.toFixed(3) + " kPa", "");
   html += `</div></div>`;
 
   html += mode === "1" ? _oneWay(fc, fy, h, db, d, wu) : _twoWay(fc, fy, h, db, d, wu);
@@ -281,7 +279,6 @@ function _oneWay(fc, fy, h, db, d, wu) {
   let html = `
     <div class="modern-chart-card">
       <div class="modern-chart-header">
-        <span class="chart-header-icon">📐</span>
         <span class="chart-header-title">Section Preview — One-Way Slab</span>
       </div>
       <div class="modern-chart-content">
@@ -291,18 +288,16 @@ function _oneWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📊</span>
       <span class="section-divider-title">Serviceability — Min Thickness</span>
       <span class="section-divider-code">ACI 318-14 Table 7.3.1.1</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("h_min Required", h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
-  html += createRow("Factored Moment (Mu)", Mu_pos.toFixed(3) + " kNm/m", "");
+  html += createRow("h<sub>min</sub> Required", h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
+  html += createRow("Factored Moment (M<sub>u</sub>)", Mu_pos.toFixed(3) + " kNm/m", "");
   html += `</div></div>`;
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">⚡</span>
       <span class="section-divider-title">Flexural Reinforcement</span>
     </div>
     <div class="modern-results-grid">`;
@@ -312,18 +307,16 @@ function _oneWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">✂️</span>
       <span class="section-divider-title">Shear Check</span>
       <span class="section-divider-code">ACI 318-14 §22.5</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createProgressBar("Vu vs φVc", Vu_1m, PhiVc, "kN/m");
-  html += createRow("φVc Capacity", PhiVc.toFixed(2) + " kN/m", PhiVc >= Vu_1m ? "SAFE" : "FAIL");
+  html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub>", Vu_1m, PhiVc, "kN/m");
+  html += createRow("φV<sub>c</sub> Capacity", PhiVc.toFixed(2) + " kN/m", PhiVc >= Vu_1m ? "SAFE" : "FAIL");
   html += `</div></div>`;
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📋</span>
       <span class="section-divider-title">Rebar Schedule</span>
     </div>`;
   html += createRebarSchedule(rebarBars);
@@ -498,42 +491,38 @@ function _twoWay(fc, fy, h, db, d, wu) {
   // ==========================================================================
   let html = `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📐</span>
       <span class="section-divider-title">Panel Geometry & Aspect Ratio</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Short Span (Lx)",    Lx.toFixed(2) + " m",  "");
-  html += createRow("Long Span (Ly)",     Ly.toFixed(2) + " m",  "");
+  html += createRow("Short Span (L<sub>x</sub>)",    Lx.toFixed(2) + " m",  "");
+  html += createRow("Long Span (L<sub>y</sub>)",     Ly.toFixed(2) + " m",  "");
   html += createRow("Aspect Ratio (β)",   beta.toFixed(2),        beta <= 2.0 ? "OK" : "WARN");
   if (beta > 2.0) html += createRow("Note", "β > 2.0: Long direction acts as one-way", "WARN");
   html += `</div></div>`;
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📊</span>
       <span class="section-divider-title">Min Thickness</span>
       <span class="section-divider-code">ACI 318-14 Table 8.3.1.1</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("h_min Required",  h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
+  html += createRow("h<sub>min</sub> Required",  h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
   html += createRow("h Provided",      h.toFixed(0)     + " mm", "");
   html += `</div></div>`;
   
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">🔨</span>
       <span class="section-divider-title">Punching Shear</span>
       <span class="section-divider-code">ACI 318-14 §22.6</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Critical Perimeter (bo)", bo.toFixed(0) + " mm", "");
-  html += createProgressBar("Vu vs φVc (Punching)", Vu_p, PhiVc, "kN");
-  html += createRow("φVc Capacity", PhiVc.toFixed(1) + " kN", PhiVc >= Vu_p ? "SAFE" : "FAIL");
+  html += createRow("Critical Perimeter (b<sub>o</sub>)", bo.toFixed(0) + " mm", "");
+  html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub> (Punching)", Vu_p, PhiVc, "kN");
+  html += createRow("φV<sub>c</sub> Capacity", PhiVc.toFixed(1) + " kN", PhiVc >= Vu_p ? "SAFE" : "FAIL");
   html += `</div></div>`;
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📏</span>
       <span class="section-divider-title">Strip Widths</span>
       <span class="section-divider-code">ACI 318-14 §8.4.1.5</span>
     </div>
@@ -546,7 +535,6 @@ function _twoWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">⚡</span>
       <span class="section-divider-title">Short Direction — Column Strip</span>
     </div>
     <div class="modern-results-grid">`;
@@ -558,7 +546,6 @@ function _twoWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">⚡</span>
       <span class="section-divider-title">Short Direction — Middle Strip</span>
     </div>
     <div class="modern-results-grid">`;
@@ -570,7 +557,6 @@ function _twoWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">⚡</span>
       <span class="section-divider-title">Long Direction — Column Strip</span>
     </div>
     <div class="modern-results-grid">`;
@@ -582,7 +568,6 @@ function _twoWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">⚡</span>
       <span class="section-divider-title">Long Direction — Middle Strip</span>
     </div>
     <div class="modern-results-grid">`;
@@ -594,7 +579,6 @@ function _twoWay(fc, fy, h, db, d, wu) {
 
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📋</span>
       <span class="section-divider-title">Rebar Schedule — Strip-by-Strip Layout</span>
     </div>`;
   html += createRebarSchedule(rebarBars);

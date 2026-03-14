@@ -129,7 +129,7 @@ function calculateBeam() {
     }
     
     torsionHTML = createDivider("TORSION (ACI 318-14 §22.7)")
-      + createRow("Torsion Threshold (Tth)", Tth.toFixed(2) + " kNm", "IGNORE");
+      + createRow("Torsion Threshold (T<sub>th</sub>)", Tth.toFixed(2) + " kNm", "IGNORE");
   }
 
   // --- Seismic hoop spacing (ACI 318-14 §18.4.2.4) ---
@@ -146,7 +146,6 @@ function calculateBeam() {
   let html = `
     <div class="modern-result-header">
       <div class="modern-result-header-content">
-        <div class="modern-result-icon">🔍</div>
         <div class="modern-result-title">
           <div class="modern-result-main-title">Beam Analysis</div>
           <div class="modern-result-subtitle">${isDoubly ? "Doubly" : "Singly"} Reinforced</div>
@@ -163,7 +162,6 @@ function calculateBeam() {
   html += `
     <div class="modern-chart-card">
       <div class="modern-chart-header">
-        <span class="chart-header-icon">📐</span>
         <span class="chart-header-title">Section Preview</span>
       </div>
       <div class="modern-chart-content">
@@ -174,14 +172,13 @@ function calculateBeam() {
   // Geometry Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📏</span>
       <span class="section-divider-title">Geometry</span>
     </div>
     <div class="modern-results-grid">`;
   html += createRow("Effective Depth (d)",    d.toFixed(1)  + " mm",  "");
-  html += createRow("Tension Steel (As)",     As.toFixed(0) + " mm²", "");
+  html += createRow("Tension Steel (A<sub>s</sub>)",     As.toFixed(0) + " mm²", "");
   if (isDoubly) {
-    html += createRow("Comp. Steel (As')",    Asp.toFixed(0) + " mm²",  "");
+    html += createRow("Comp. Steel (A<sub>s</sub>')",    Asp.toFixed(0) + " mm²",  "");
     html += createRow("Comp. Steel Stress",   flex.fspText,              "");
   }
   html += `</div></div>`;
@@ -189,19 +186,17 @@ function calculateBeam() {
   // Serviceability Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📊</span>
       <span class="section-divider-title">Serviceability — Min Thickness</span>
       <span class="section-divider-code">NSCP 2015 Table 409.3.1.1</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("h_min Required",  h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
+  html += createRow("h<sub>min</sub> Required",  h_min.toFixed(0) + " mm", h >= h_min ? "PASS" : "FAIL");
   html += createRow("h Provided",      h.toFixed(0)     + " mm", "");
   html += `</div></div>`;
 
   // Flexural Strength Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">💪</span>
       <span class="section-divider-title">Flexural Strength</span>
       <span class="section-divider-code">ACI 318-14 §22.3</span>
     </div>
@@ -209,27 +204,25 @@ function calculateBeam() {
   html += createRow("Neutral Axis (c)",     c.toFixed(1)   + " mm",  "");
   html += createRow("Net Tensile Strain",   et.toFixed(5),            et >= 0.005 ? "DUCTILE" : "TRANSITION");
   html += createRow("Strength Factor (φ)",  phi.toFixed(3),           "");
-  html += createProgressBar("φMn vs Mu",    Mu, PhiMn,    "kNm");
-  html += createRow("φMn Capacity",         PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
+  html += createProgressBar("φM<sub>n</sub> vs M<sub>u</sub>",    Mu, PhiMn,    "kNm");
+  html += createRow("φM<sub>n</sub> Capacity",         PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
   html += `</div></div>`;
 
   // Shear Design Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">✂️</span>
       <span class="section-divider-title">Shear Design</span>
       <span class="section-divider-code">ACI 318-14 §22.5</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createProgressBar("Vu vs φVc",    Vu,  shear.PhiVc, "kN");
-  html += createRow("φVc Capacity",         shear.PhiVc.toFixed(2) + " kN", "");
+  html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub>",    Vu,  shear.PhiVc, "kN");
+  html += createRow("φV<sub>c</sub> Capacity",         shear.PhiVc.toFixed(2) + " kN", "");
   html += createRow("Stirrup Design",       shear.summary, shear.pass ? "PASS" : "FAIL");
   html += `</div></div>`;
 
   // Seismic Detailing Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">🌊</span>
       <span class="section-divider-title">Seismic Detailing — Zone 4</span>
       <span class="section-divider-code">ACI 318-14 §18.4.2</span>
     </div>
@@ -245,7 +238,6 @@ function calculateBeam() {
   // Rebar Schedule Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📋</span>
       <span class="section-divider-title">Rebar Schedule</span>
     </div>`;
   html += createRebarSchedule(rebarBars);

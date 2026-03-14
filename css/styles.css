@@ -649,10 +649,6 @@ body {
   margin-bottom: var(--space-3);
 }
 
-.preset-icon {
-  font-size: 1.25rem;
-}
-
 .preset-title {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -665,58 +661,6 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-3);
-}
-
-/* ACI 318-14 Helper Box */
-.aci-helper-box {
-  background: linear-gradient(135deg, var(--primary-50), #ffffff);
-  border: 1px solid var(--primary-200);
-  border-left: 4px solid var(--primary-500);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  margin-bottom: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-
-.aci-helper-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.aci-helper-title {
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--primary-800);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.aci-helper-text {
-  font-size: 0.8125rem;
-  color: var(--slate-600);
-  margin-bottom: var(--space-3);
-  line-height: 1.5;
-}
-
-.btn-aci-load {
-  background: white;
-  color: var(--primary-600);
-  border: 1px solid var(--primary-200);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-aci-load:hover {
-  background: var(--primary-50);
-  border-color: var(--primary-300);
-  transform: translateY(-1px);
 }
 
 /* ============================================================================
@@ -1110,8 +1054,7 @@ canvas {
   .btn-print-modern,
   .preset-group,
   .section-card,
-  .unit-toggle-container,
-  .aci-helper-box {
+  .unit-toggle-container {
     display: none !important;
   }
 
@@ -1212,18 +1155,6 @@ canvas {
   gap: 1rem;
 }
 
-.modern-result-icon {
-  font-size: 2rem;
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .modern-result-title {
   color: white;
 }
@@ -1298,10 +1229,6 @@ canvas {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.chart-header-icon {
-  font-size: 1.25rem;
 }
 
 .chart-header-title {
@@ -1380,11 +1307,6 @@ canvas {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-}
-
-.section-divider-icon {
-  font-size: 1.125rem;
-  flex-shrink: 0;
 }
 
 .section-divider-title {

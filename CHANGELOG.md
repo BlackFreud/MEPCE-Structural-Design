@@ -645,3 +645,92 @@ None — All functionality preserved, purely visual/structural improvements
 - Added JSDoc on every function with NSCP/ACI clause references
 - Named constants replacing magic numbers
 - README.md with module reference tables
+
+# CHANGELOG — Structural Design Suite
+
+## Session 3 — UI/Canvas Fixes
+
+### FIX-01 · Beam Section Preview — Centering & Print Visibility
+- **File:** `css/styles.css`
+- **Problem:** Canvas not centered inside `.section-preview` card; hidden during print
+- **Change:** Add `display:flex; justify-content:center; align-items:center` to `.section-preview`; remove it from print `display:none` list
+
+### FIX-02 · Column P-M Curve — Line Escaping Plot Area
+- **File:** `js/canvas.js`
+- **Problem:** Negative Pn points plotted outside diagram bounds
+- **Change:** Filter out negative-y points before drawing; add `ctx.rect` clip region to prevent overdraw
+
+### FIX-03 · Slab UI — Span & Support Layout + Visual Result
+- **File:** `css/styles.css` — add breathing room to `#slab-oneway`
+- **File:** `js/canvas.js` — add `drawSlabSection()` function
+- **File:** `js/slab.js` — inject canvas into one-way result HTML
+
+---
+
+## Session 2 — Full Modular Refactor + All Improvements
+
+### Correctness
+- C1: Slab Mu uses selected moment coefficient (was hardcoded 1/8)
+- C2: P-M curve uses clean linear c-sweep (80 steps, uniform)
+- C3: Column d/d' reads actual `c_cc` input field
+
+### Refinements
+- R1: CSS-only select chevron (no data-URI SVG)
+- R2: Consistent `drawXxx(canvasId, ...)` signature across all canvas functions
+- R3: `requestAnimationFrame` replaces `setTimeout` for post-paint canvas draw
+- R4: Single `innerHTML` injection per render via `renderResults()`
+- R5: Google Fonts `display=swap` + system-font fallback stack for offline use
+
+### Features
+- F1: Print / PDF button in result header + full `@media print` stylesheet
+- F2: Inline field validation — red border + message under field, no `alert()`
+- F3: Demand/capacity progress bar with green/amber/red fill
+- F4: Rebar schedule table in every module result
+- F5: Reset button per module — restores defaults, clears errors, hides results
+
+---
+
+## Session 1 — Initial Modularization
+
+- Split monolithic HTML into 10 files
+- Separated HTML / CSS / JS
+- Added JSDoc on every function with NSCP/ACI clause references
+- Named constants replacing magic numbers
+- README.md with module reference tables
+
+---
+
+## Session 5 — UI Refinement & Optimization
+
+### R1 · Emoji Removal
+- `index.html` — Nav icons (📊 ⬜ ▭) replaced with text badges (B · C · S)
+- `index.html` — Preset group icons (🏗️ ×3) removed
+- `index.html` — Calculate button icon spans (`🔍 ×3`) removed
+- `beam.js` — `modern-result-icon` (🔍), `chart-header-icon` (📐), 6× `section-divider-icon` removed
+- `column.js` — `modern-result-icon` (🏛️), 2× `chart-header-icon` (📈 📐), 5× `section-divider-icon` removed
+- `slab.js` — `modern-result-icon` (🏗️), `chart-header-icon` (📐), 14× `section-divider-icon` removed
+
+### R2 · ACI Helper Box Unified
+- `index.html` — `.aci-helper-box` replaced with standard `.section-card` pattern
+- Load button restyled as `.btn-reset` (existing secondary style)
+- `styles.css` — 7 dead blocks removed: `.aci-helper-box`, `.aci-helper-header`, `.aci-helper-title`, `.aci-helper-text`, `.btn-aci-load`, `.btn-aci-load:hover`, `@media print` reference
+
+### R3 · CSS Dead Code Removal
+- `styles.css` — Removed orphaned blocks: `.preset-icon`, `.modern-result-icon`, `.chart-header-icon`, `.section-divider-icon` (10 classes total, 0 remaining)
+
+### R4 · Sub/Superscript Refinement
+- `beam.js` — 8 UI labels: h_min, As, As', Tth, φMn, Mu, Vu, φVc
+- `column.js` — 9 UI labels: Ag, Ast, ρg, δns, Mc, Pu, φPn,max, lo, so
+- `slab.js` — 9 UI labels: wu, hmin (×2), Mu, Lx, Ly, bo, Vu, φVc (×2)
+- `index.html` — 12 input labels: fc' (×3), fy (×3), fyt, Mu (×2), Vu, Tu, Pu, Lu, Lx, Ly
+
+---
+
+## Session 4 — Unit Toggle Integration + Uploads Sync
+
+- `index.html` — Unit toggle HTML uncommented; all uploaded file revisions synced
+- `js/main.js` — `UNIT_SYSTEM` state, `UNIT_CONFIG` (6 types), `toggleUnits()` implemented
+- `css/styles.css` — `.unit-label.active` highlight added
+- `js/slab.js` — Adopted full 604-line version with ACI 318-14 Table 8.10.3.1 data
+- `README.md` — Full rewrite: UI layout, all features, canvas/utility function tables,
+                 constants reference, known limitations, extension guide

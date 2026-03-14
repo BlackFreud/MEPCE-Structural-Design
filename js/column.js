@@ -124,7 +124,6 @@ function calculateColumn() {
   let html = `
     <div class="modern-result-header">
       <div class="modern-result-header-content">
-        <div class="modern-result-icon">🏛️</div>
         <div class="modern-result-title">
           <div class="modern-result-main-title">Column Analysis</div>
           <div class="modern-result-subtitle">${shape === "rect" ? "Rectangular" : "Circular"} ${tie === "spiral" ? "Spiral" : "Tied"}</div>
@@ -142,7 +141,6 @@ function calculateColumn() {
     <div class="modern-charts-row">
       <div class="modern-chart-card">
         <div class="modern-chart-header">
-          <span class="chart-header-icon">📈</span>
           <span class="chart-header-title">P-M Interaction Diagram</span>
         </div>
         <div class="modern-chart-content">
@@ -162,7 +160,6 @@ function calculateColumn() {
       
       <div class="modern-chart-card">
         <div class="modern-chart-header">
-          <span class="chart-header-icon">📐</span>
           <span class="chart-header-title">Section Preview</span>
         </div>
         <div class="modern-chart-content">
@@ -174,42 +171,39 @@ function calculateColumn() {
   // Section Properties
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📏</span>
       <span class="section-divider-title">Section Properties</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Gross Area (Ag)",      Ag.toFixed(0) + " mm²", "");
-  html += createRow("Total Steel (As_t)",   As_t.toFixed(0) + " mm²", "");
-  html += createRow("Steel Ratio (ρg)",     (rho_g * 100).toFixed(2) + " %",
+  html += createRow("Gross Area (A<sub>g</sub>)",      Ag.toFixed(0) + " mm²", "");
+  html += createRow("Total Steel (A<sub>st</sub>)",   As_t.toFixed(0) + " mm²", "");
+  html += createRow("Steel Ratio (ρ<sub>g</sub>)",     (rho_g * 100).toFixed(2) + " %",
     rho_g >= 0.01 && rho_g <= 0.08 ? "PASS" : "FAIL");
   html += `</div></div>`;
 
   // Slenderness
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📊</span>
       <span class="section-divider-title">Slenderness — Limit kl/r = ${slenLimit}</span>
       <span class="section-divider-code">ACI 318-14 §6.2.5</span>
     </div>
     <div class="modern-results-grid">`;
   html += createRow("kl/r",               klr.toFixed(2),           isSlender ? "SLENDER" : "SHORT");
   if (isSlender && !sway)
-    html += createRow("Magnification (δns)", delta.toFixed(3),       "");
-  html += createRow("Design Moment (Mc)",  Mc.toFixed(2) + " kNm",  "");
+    html += createRow("Magnification (δ<sub>ns</sub>)", delta.toFixed(3),       "");
+  html += createRow("Design Moment (M<sub>c</sub>)",  Mc.toFixed(2) + " kNm",  "");
   html += `</div></div>`;
 
   // Axial-Flexural Strength
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">💪</span>
       <span class="section-divider-title">Axial-Flexural Strength</span>
       <span class="section-divider-code">ACI 318-14 §22.4</span>
     </div>
     <div class="modern-results-grid">`;
   html += createRow("P-M Demand",          inside ? "Inside envelope" : "Outside envelope",
     inside ? "SAFE" : "FAIL");
-  html += createProgressBar("Pu vs φPn_max", Pu, PhiPnMax, "kN");
-  html += createRow("φPn_max",             PhiPnMax.toFixed(1) + " kN",
+  html += createProgressBar("P<sub>u</sub> vs φP<sub>n,max</sub>", Pu, PhiPnMax, "kN");
+  html += createRow("φP<sub>n,max</sub>",             PhiPnMax.toFixed(1) + " kN",
     PhiPnMax >= Pu ? "PASS" : "FAIL");
   html += `</div></div>`;
 
@@ -217,21 +211,19 @@ function calculateColumn() {
   // Seismic Detailing
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">🌊</span>
       <span class="section-divider-title">Seismic Detailing — Zone 4</span>
       <span class="section-divider-code">ACI 318-14 §18.7.5</span>
     </div>
     <div class="modern-results-grid">`;
   html += createRow("Tie Type",              tie === "spiral" ? "Spiral" : "Rectangular Tie", "");
-  html += createRow("Confinement Zone (lo)", `${lo} mm from each joint`, "");
-  html += createRow("Hoops @ Ends (so)",     `${dt}mm Ø @ ${so}mm o.c.`, "");
+  html += createRow("Confinement Zone (l<sub>o</sub>)", `${lo} mm from each joint`, "");
+  html += createRow("Hoops @ Ends (s<sub>o</sub>)",     `${dt}mm Ø @ ${so}mm o.c.`, "");
   html += createRow("Ties @ Mid-Height (s)", `${dt}mm Ø @ ${s_std}mm o.c.`, "");
   html += `</div></div>`;
 
   // Rebar Schedule
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-icon">📋</span>
       <span class="section-divider-title">Rebar Schedule</span>
     </div>`;
   html += createRebarSchedule(rebarBars);
