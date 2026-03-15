@@ -389,3 +389,143 @@ function _dimArrow(ctx, x1, y1, x2, y2) {
   ctx.beginPath(); ctx.moveTo(x1 - TICK, y1); ctx.lineTo(x1 + TICK, y1); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(x2 - TICK, y2); ctx.lineTo(x2 + TICK, y2); ctx.stroke();
 }
+// =============================================================================
+// FOOTING SECTION — Plan + Elevation side-by-side
+// =============================================================================
+
+/**
+ * Draws footing plan view (left) and elevation cross-section (right).
+ * @param {string} canvasId
+ * @param {number} B      Footing width (mm)
+ * @param {number} L      Footing length (mm)
+ * @param {number} h      Footing depth (mm)
+ * @param {number} cc     Clear cover (mm)
+ * @param {number} cw     Column width (mm)
+ * @param {number} cl     Column length (mm)
+ * @param {number} db     Bar diameter (mm)
+ * @param {number} d      Effective depth (mm)
+ */
+function drawFootingSection(canvasId, B, L, h, cc, cw, cl, db, d) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const PAD   = 24;
+  const halfW = W / 2 - 4;
+
+  // ---- PLAN VIEW (left half) ----
+  const scaleP = Math.min((halfW - 2 * PAD) / B, (H - 2 * PAD) / L);
+  const pW = B * scaleP, pH = L * scaleP;
+  const px0 = PAD + (halfW - 2 * PAD - pW) / 2;
+  const py0 = PAD + (H - 2 * PAD - pH) / 2;
+
+  // Footing outline
+  ctx.fillStyle = COLOR.concrete;
+  ctx.fillRect(px0, py0, pW, pH);
+  ctx.strokeStyle = COLOR.border; ctx.lineWidth = 1.5;
+  ctx.strokeRect(px0, py0, pW, pH);
+
+  // Column footprint
+  const cpW = cw * scaleP, cpL = cl * scaleP;
+  const cpx = px0 + (pW - cpW) / 2, cpy = py0 + (pH - cpL) / 2;
+  ctx.fillStyle = "#bbb";
+  ctx.fillRect(cpx, cpy, cpW, cpL);
+  ctx.strokeStyle = "#666"; ctx.lineWidth = 1;
+  ctx.strokeRect(cpx, cpy, cpW, cpL);
+
+  // Rebar grid (plan) — show as dots
+  const barR = Math.max(2, db * scaleP * 0.35);
+  ctx.fillStyle = COLOR.bar;
+  const nL = Math.max(2, Math.min(5, Math.floor(B / 300)));
+  const nS = Math.max(2, Math.min(5, Math.floor(L / 300)));
+  const insetP = cc * scaleP;
+  for (let i = 0; i < nL; i++) {
+    const bx = px0 + insetP + (pW - 2 * insetP) * i / (nL - 1);
+    ctx.beginPath(); ctx.arc(bx, py0 + pH / 2, barR, 0, 2 * Math.PI); ctx.fill();
+  }
+  for (let j = 0; j < nS; j++) {
+    const by = py0 + insetP + (pH - 2 * insetP) * j / (nS - 1);
+    ctx.beginPath(); ctx.arc(px0 + pW / 2, by, barR, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  // Plan label
+  ctx.fillStyle = COLOR.text; ctx.font = "bold 10px 'Courier New',monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("PLAN", px0 + pW / 2, py0 - 8);
+  ctx.font = "9px 'Courier New',monospace";
+  ctx.fillText(`B=${B}`, px0 + pW / 2, py0 + pH + 14);
+  ctx.save();
+  ctx.translate(px0 - 12, py0 + pH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(`L=${L}`, 0, 0);
+  ctx.restore();
+
+  // Divider
+  ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W / 2, PAD); ctx.lineTo(W / 2, H - PAD); ctx.stroke();
+
+  // ---- ELEVATION (right half) ----
+  const ex0 = W / 2 + 4;
+  const scaleE = Math.min((halfW - 2 * PAD) / B, (H - 2 * PAD) / (h + 60));
+  const eW = B * scaleE, eH = h * scaleE;
+  const ex = ex0 + PAD + (halfW - 2 * PAD - eW) / 2;
+  const ey = PAD + 30 + (H - 2 * PAD - 30 - eH) / 2;
+
+  // Column stub above footing
+  const ecpW = cw * scaleE;
+  const ecH  = Math.min(30, H * 0.15);
+  ctx.fillStyle = "#bbb";
+  ctx.fillRect(ex + (eW - ecpW) / 2, ey - ecH, ecpW, ecH);
+  ctx.strokeStyle = "#666"; ctx.lineWidth = 1;
+  ctx.strokeRect(ex + (eW - ecpW) / 2, ey - ecH, ecpW, ecH);
+
+  // Footing body
+  ctx.fillStyle = COLOR.concrete;
+  ctx.fillRect(ex, ey, eW, eH);
+  ctx.strokeStyle = COLOR.border; ctx.lineWidth = 1.5;
+  ctx.strokeRect(ex, ey, eW, eH);
+
+  // Hatch
+  ctx.save();
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  const hatchGap = 12;
+  for (let hx = ex; hx < ex + eW; hx += hatchGap) {
+    ctx.beginPath(); ctx.moveTo(hx, ey); ctx.lineTo(hx + eH, ey + eH); ctx.stroke();
+  }
+  ctx.restore();
+
+  // Bottom rebar row
+  const barRadE = Math.max(2.5, db * scaleE * 0.4);
+  const barYe   = ey + eH - cc * scaleE - barRadE;
+  ctx.fillStyle = COLOR.bar;
+  const nBarsE  = Math.max(3, Math.min(6, Math.floor(B / 250)));
+  const insetE  = cc * scaleE;
+  for (let i = 0; i < nBarsE; i++) {
+    const bx = ex + insetE + (eW - 2 * insetE) * i / (nBarsE - 1);
+    ctx.beginPath(); ctx.arc(bx, barYe, barRadE, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  // Cover dotted line
+  ctx.setLineDash([3, 3]);
+  ctx.strokeStyle = "rgba(41,128,185,0.5)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ex, barYe + barRadE + cc * scaleE);
+  ctx.lineTo(ex + eW, barYe + barRadE + cc * scaleE); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dimension labels
+  ctx.fillStyle = COLOR.text; ctx.font = "bold 10px 'Courier New',monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("ELEVATION", ex + eW / 2, ey - ecH - 8);
+  ctx.font = "9px 'Courier New',monospace";
+  ctx.fillText(`B=${B}`, ex + eW / 2, ey + eH + 14);
+  ctx.fillStyle = "#2980b9";
+  ctx.fillText(`cc=${cc}`, ex + eW + 28, barYe + cc * scaleE / 2 + 3);
+  ctx.fillStyle = COLOR.text;
+  ctx.save();
+  ctx.translate(ex + eW + 14, ey + eH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(`h=${h}`, 0, 0);
+  ctx.restore();
+}

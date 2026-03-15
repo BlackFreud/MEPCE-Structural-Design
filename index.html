@@ -56,6 +56,11 @@
           <span class="nav-item-icon">S</span>
           <span class="nav-item-text">Slab Design</span>
         </button>
+
+        <button class="nav-item" onclick="switchModule('footing', event)">
+          <span class="nav-item-icon">F</span>
+          <span class="nav-item-text">Footing Design</span>
+        </button>
       </div>
     </nav>
 
@@ -158,8 +163,8 @@
 
       <!-- Right: Unit Toggle + Project Info -->
       <div class="topbar-right">
-        
-      <!--  Unit Toggle
+
+        <!-- Unit Toggle -->
         <div class="unit-toggle-container">
           <span class="unit-label active" id="label-metric">Metric</span>
           <div class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">
@@ -167,8 +172,6 @@
           </div>
           <span class="unit-label" id="label-english">English</span>
         </div>
-
-       -->
 
         <!-- Project Info -->
         <div class="project-info">
@@ -409,6 +412,22 @@
             </div>
             <div class="form-group">
               <label class="form-label">
+                SDL (service, distributed)
+                <span class="field-unit" data-unit-type="force">(kN/m)</span>
+              </label>
+              <input type="number" class="form-input" id="b_wDL" value="0" min="0" step="0.5">
+              <span class="field-hint">Superimposed dead load per unit length — for deflection check</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                LL (service, distributed)
+                <span class="field-unit" data-unit-type="force">(kN/m)</span>
+              </label>
+              <input type="number" class="form-input" id="b_wLL" value="0" min="0" step="0.5">
+              <span class="field-hint">Live load per unit length — for deflection check</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
                 Span Length
                 <span class="field-unit" data-unit-type="length_m">(m)</span>
               </label>
@@ -614,10 +633,27 @@
             </div>
             <div class="form-group">
               <label class="form-label">
-                Factored Moment M<sub>u</sub>
+                Factored Moment M<sub>u</sub> (M<sub>2</sub>)
                 <span class="field-unit" data-unit-type="moment">(kNm)</span>
               </label>
               <input type="number" class="form-input" id="c_M2" value="150" min="0">
+              <span class="field-hint">Larger end moment — always positive</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Smaller End Moment M<sub>1</sub>
+                <span class="field-unit" data-unit-type="moment">(kNm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_M1" value="80" min="0">
+              <span class="field-hint">Magnitude only — sign set by curvature below</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Curvature</label>
+              <select class="form-select" id="c_curv">
+                <option value="1" selected>Single curvature (M1/M2 positive)</option>
+                <option value="-1">Double curvature (M1/M2 negative)</option>
+              </select>
+              <span class="field-hint">Double curvature → higher limit (braced frames) — ACI §6.2.5.1</span>
             </div>
             <div class="form-group">
               <label class="form-label">
@@ -854,6 +890,15 @@
                 <span class="field-hint">Long dim. — same as c<sub>1</sub> for square column</span>
               </div>
               <div class="form-group">
+                <label class="form-label">Column Position</label>
+                <select class="form-select" id="s_col_pos">
+                  <option value="40" selected>Interior (α<sub>s</sub> = 40)</option>
+                  <option value="30">Edge (α<sub>s</sub> = 30)</option>
+                  <option value="20">Corner (α<sub>s</sub> = 20)</option>
+                </select>
+                <span class="field-hint">Controls punching shear eq. (b) — ACI §22.6.5.2</span>
+              </div>
+              <div class="form-group">
                 <label class="form-label">Edge Condition</label>
                 <select class="form-select" id="s_edge_cond" onchange="updateSlabCoefficients()">
                   <option value="interior">Interior Panel</option>
@@ -922,6 +967,178 @@
 
       </section>
 
+      <!-- ==================== FOOTING MODULE ==================== -->
+      <section class="module" id="footing">
+
+        <!-- Module Header with Reset -->
+        <div class="module-header">
+          <h2>Footing Design Module</h2>
+          <button class="btn-reset" onclick="resetModule('footing')" title="Reset all footing inputs to defaults">↺ Reset</button>
+        </div>
+
+        <!-- Material Presets -->
+        <div class="preset-group">
+          <div class="preset-header">
+            <div class="preset-title">Material Presets</div>
+            <div class="preset-subtitle">Philippine Standards</div>
+          </div>
+          <div class="preset-grid">
+            <div class="form-group">
+              <label class="form-label">Concrete Strength</label>
+              <select class="form-select" id="concrete-preset-footing" onchange="applyConcretePreset('footing')">
+                <option value="">Select…</option>
+                <option value="21">21 MPa (Standard)</option>
+                <option value="28">28 MPa (Common)</option>
+                <option value="35">35 MPa (High-Strength)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rebar Grade</label>
+              <select class="form-select" id="rebar-preset-footing" onchange="applyRebarPreset('footing')">
+                <option value="">Select…</option>
+                <option value="230">Grade 33 (230 MPa)</option>
+                <option value="275">Grade 40 (275 MPa)</option>
+                <option value="414">Grade 60 (414 MPa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Materials -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">1</span>
+              Materials
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                f<sub>c</sub>'
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="f_fc" value="21" min="17">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                f<sub>y</sub>
+                <span class="field-unit" data-unit-type="stress">(MPa)</span>
+              </label>
+              <input type="number" class="form-input" id="f_fy" value="275" min="230">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Column & Footing Geometry -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">2</span>
+              Geometry
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Footing Width B
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_B" value="2000" min="500" step="50">
+              <span class="field-hint">Short plan dimension</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Footing Length L
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_L" value="2000" min="500" step="50">
+              <span class="field-hint">Long plan dimension (parallel to Mu)</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Footing Depth h
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_h" value="500" min="300" step="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Clear Cover
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_cc" value="75" min="75">
+              <span class="field-hint">Min 75mm — soil contact face</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Bar Diameter
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_db" value="16" min="12">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Column Width c<sub>w</sub>
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_cw" value="400" min="200" step="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Column Length c<sub>l</sub>
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_cl" value="400" min="200" step="50">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Loads & Soil -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-number">3</span>
+              Loads &amp; Soil
+            </div>
+          </div>
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Factored Axial P<sub>u</sub>
+                <span class="field-unit" data-unit-type="force">(kN)</span>
+              </label>
+              <input type="number" class="form-input" id="f_Pu" value="1200" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Factored Moment M<sub>u</sub>
+                <span class="field-unit" data-unit-type="moment">(kNm)</span>
+              </label>
+              <input type="number" class="form-input" id="f_Mu" value="0" min="0">
+              <span class="field-hint">About long axis — leave 0 for concentric</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Allowable Bearing q<sub>a</sub>
+                <span class="field-unit" data-unit-type="pressure">(kPa)</span>
+              </label>
+              <input type="number" class="form-input" id="f_qa" value="150" min="50">
+              <span class="field-hint">Net allowable soil bearing pressure</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <button class="btn btn-primary btn-lg" onclick="calculateFooting()">
+          Analyze Footing
+        </button>
+
+        <!-- Results Card -->
+        <div id="footing-results" class="results-card" style="display:none;"></div>
+
+      </section>
+
     </div>
   </div>
 
@@ -936,6 +1153,7 @@
 <script src="js/beam.js"></script>
 <script src="js/column.js"></script>
 <script src="js/slab.js"></script>
+<script src="js/footing.js"></script>
 <script src="js/main.js"></script>
 
 <script>

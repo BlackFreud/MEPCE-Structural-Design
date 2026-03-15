@@ -62,12 +62,17 @@ function calculateColumn() {
   // ==========================================================================
   // SLENDERNESS (ACI 318-14 §6.2.5.1)
   // r = 0.3h (rect) or 0.25D (circ)
-  // Limit: 34 non-sway (conservative, M1/M2 ratio not yet input)
-  //        22 sway
+  // Non-sway limit: 34 − 12(M1/M2),  clamped [0, 40]
+  //   M1/M2 positive = single curvature (more conservative)
+  //   M1/M2 negative = double curvature (higher limit, typical braced frames)
+  // Sway limit: 22 (unchanged)
   // ==========================================================================
+  const M1        = getVal("c_M1") || 0;
+  const curv      = parseInt(getStr("c_curv")) || 1;    // +1 single, -1 double
+  const M1M2      = (M1 / Math.max(Math.abs(Mu), 1e-9)) * curv;
   const r         = shape === "rect" ? 0.3 * dim : 0.25 * D;
   const klr       = (k_eff * Lu) / r;
-  const slenLimit = sway ? 22 : 34;
+  const slenLimit = sway ? 22 : Math.min(40, Math.max(0, 34 - 12 * M1M2));
   const isSlender = klr > slenLimit;
 
   // ==========================================================================
@@ -207,15 +212,19 @@ function calculateColumn() {
   // Slenderness
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-title">Slenderness — Limit kl/r = ${slenLimit}</span>
+      <span class="section-divider-title">Slenderness — Limit kl/r = ${slenLimit.toFixed(1)}</span>
       <span class="section-divider-code">ACI 318-14 §6.2.5</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Eff. Length Factor (k)",  k_eff.toFixed(2),         sway ? "SWAY" : "NON-SWAY");
-  html += createRow("kl/r",                    klr.toFixed(2),           isSlender ? "SLENDER" : "SHORT");
+  html += createRow("Eff. Length Factor (k)",    k_eff.toFixed(2),             sway ? "SWAY" : "NON-SWAY");
+  html += createRow("kl/r",                      klr.toFixed(2),               isSlender ? "SLENDER" : "SHORT");
+  if (!sway) {
+    html += createRow("M<sub>1</sub>/M<sub>2</sub>", M1M2.toFixed(3) + (curv === -1 ? " (double curvature)" : " (single curvature)"), "");
+    html += createRow("Slenderness Limit",        `34 − 12×(${M1M2.toFixed(3)}) = ${slenLimit.toFixed(1)}`, "");
+  }
   if (isSlender && !sway) {
-    html += createRow("β<sub>dns</sub> (creep)", bdns.toFixed(2),         "");
-    html += createRow("Magnification (δ<sub>ns</sub>)", delta.toFixed(3), "");
+    html += createRow("β<sub>dns</sub> (creep)", bdns.toFixed(2),               "");
+    html += createRow("Magnification (δ<sub>ns</sub>)", delta.toFixed(3),       "");
   }
   html += createRow("Design Moment (M<sub>c</sub>)",  Mc.toFixed(2) + " kNm",  "");
   html += `</div></div>`;

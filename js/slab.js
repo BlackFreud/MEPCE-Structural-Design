@@ -414,12 +414,12 @@ function _twoWay(fc, fy, h, db, d, wu) {
   //   (b) Vc = 0.083(2 + αs·d/bo) √fc' · bo · d
   //   (c) Vc = 0.33               √fc' · bo · d
   // βc  = long/short column dim ratio
-  // αs  = 40 interior | 30 edge | 20 corner → 40 assumed (interior, conservative)
+  // αs  = 40 interior | 30 edge | 20 corner — per ACI 318-14 §22.6.5.2
   // ==========================================================================
   const bo      = 2 * (col_w + col_h + 2 * d);
   const Vu_p    = wu * Lx * Ly;
   const beta_c  = Math.max(col_w, col_h) / Math.min(col_w, col_h);
-  const alphaS  = 40;    // Interior column — conservative default
+  const alphaS  = parseInt(getStr("s_col_pos")) || 40;  // 40 interior | 30 edge | 20 corner
   const sqrtFc  = Math.sqrt(fc);
 
   const Vc_a    = 0.083 * (2 + 4  / beta_c)          * sqrtFc * bo * d / 1000;
@@ -579,9 +579,10 @@ function _twoWay(fc, fy, h, db, d, wu) {
     <div class="modern-results-grid">`;
   html += createRow("Column Dimensions",                    `${col_w} × ${col_h} mm`,   "");
   html += createRow("β<sub>c</sub> (long/short)",           beta_c.toFixed(3),           "");
+  html += createRow("α<sub>s</sub> (column position)",      `${alphaS} — ${alphaS === 40 ? "Interior" : alphaS === 30 ? "Edge" : "Corner"}`, "");
   html += createRow("Critical Perimeter (b<sub>o</sub>)",   bo.toFixed(0)      + " mm",  "");
   html += createRow("Eq. (a) V<sub>c</sub>",                Vc_a.toFixed(1)    + " kN",  "");
-  html += createRow("Eq. (b) V<sub>c</sub> (α<sub>s</sub>=40 interior)", Vc_b.toFixed(1) + " kN", "");
+  html += createRow("Eq. (b) V<sub>c</sub> (α<sub>s</sub>·d/b<sub>o</sub>)", Vc_b.toFixed(1) + " kN", "");
   html += createRow("Eq. (c) V<sub>c</sub>",                Vc_c.toFixed(1)    + " kN",  "");
   html += createRow("Governing Equation",                   Vc_govn,                      "");
   html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub> (Punching)", Vu_p, PhiVc, "kN");

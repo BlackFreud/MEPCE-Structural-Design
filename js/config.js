@@ -45,6 +45,9 @@ const UNIT_CONVERSIONS = {
   
   // Force conversions
   kN_to_kip:  0.224809,        // kilonewtons → kips
+
+  // Force-per-length conversions
+  kNm_to_kipft_per_m: 0.068522, // kN/m → kip/ft
   
   // Moment conversions
   kNm_to_kipft: 0.737562,      // kN·m → kip·ft

@@ -52,8 +52,22 @@ function validateFields(fields) {
   fields.forEach(({ id, label, min }) => {
     const val = getVal(id);
     if (isNaN(val)) { showError(id, `${label} is required`); valid = false; }
-    else if (min !== undefined && val < min) { showError(id, `Must be ≥ ${min}`); valid = false; }
-    else clearError(id);
+    else if (min !== undefined) {
+      // Scale the metric minimum threshold to the current unit system
+      const fieldDef = FIELD_CONVERSIONS[id];
+      let scaledMin = min;
+      if (CURRENT_UNIT_SYSTEM === "english" && fieldDef) {
+        const toEng = true;
+        if      (fieldDef.type === 'length'           ) scaledMin = convertLength(min, toEng, fieldDef.unit || 'mm');
+        else if (fieldDef.type === 'stress'           ) scaledMin = convertStress(min, toEng);
+        else if (fieldDef.type === 'force'            ) scaledMin = convertForce(min, toEng);
+        else if (fieldDef.type === 'moment'           ) scaledMin = convertMoment(min, toEng);
+        else if (fieldDef.type === 'pressure'         ) scaledMin = convertPressure(min, toEng);
+        else if (fieldDef.type === 'force_per_length' ) scaledMin = convertForcePerLength(min, toEng);
+      }
+      if (val < scaledMin) { showError(id, `Must be ≥ ${min} (metric)`); valid = false; }
+      else clearError(id);
+    } else clearError(id);
   });
   return valid;
 }
@@ -170,6 +184,18 @@ function convertMoment(value, toEnglish) {
 function convertPressure(value, toEnglish) {
   return toEnglish ? value * UNIT_CONVERSIONS.kPa_to_psf : value / UNIT_CONVERSIONS.kPa_to_psf;
 }
+
+/**
+ * Convert distributed load values (kN/m ↔ kip/ft)
+ * @param {number} value - Input value
+ * @param {boolean} toEnglish - true = kN/m → kip/ft, false = kip/ft → kN/m
+ * @returns {number} Converted value
+ */
+function convertForcePerLength(value, toEnglish) {
+  return toEnglish
+    ? value * UNIT_CONVERSIONS.kNm_to_kipft_per_m
+    : value / UNIT_CONVERSIONS.kNm_to_kipft_per_m;
+}
 // =============================================================================
 // DOM UPDATE FUNCTIONS
 // =============================================================================
@@ -187,6 +213,72 @@ function updateUnitLabels(system) {
   });
 }
 
+// =============================================================================
+// FIELD CONVERSIONS MAP — module-level constant
+// Used by convertAllInputs() and validateFields() for unit-aware min checking
+// =============================================================================
+const FIELD_CONVERSIONS = {
+  // Beam inputs
+  b_b:   { type: 'length',           unit: 'mm' },
+  b_h:   { type: 'length',           unit: 'mm' },
+  b_cc:  { type: 'length',           unit: 'mm' },
+  b_fc:  { type: 'stress'                        },
+  b_fy:  { type: 'stress'                        },
+  b_fyt: { type: 'stress'                        },
+  b_db:  { type: 'length',           unit: 'mm' },
+  b_ds:  { type: 'length',           unit: 'mm' },
+  b_dbp: { type: 'length',           unit: 'mm' },
+  b_dp:  { type: 'length',           unit: 'mm' },
+  b_Mu:  { type: 'moment'                        },
+  b_Vu:  { type: 'force'                         },
+  b_Tu:  { type: 'moment'                        },
+  b_wDL: { type: 'force_per_length'              },  // new — deflection check
+  b_wLL: { type: 'force_per_length'              },  // new — deflection check
+  b_L:   { type: 'length',           unit: 'm'  },
+
+  // Column inputs
+  c_b:   { type: 'length',           unit: 'mm' },
+  c_h:   { type: 'length',           unit: 'mm' },
+  c_D:   { type: 'length',           unit: 'mm' },
+  c_cc:  { type: 'length',           unit: 'mm' },
+  c_hx:  { type: 'length',           unit: 'mm' },  // new — confinement hoop spacing
+  c_fc:  { type: 'stress'                        },
+  c_fy:  { type: 'stress'                        },
+  c_db:  { type: 'length',           unit: 'mm' },
+  c_dt:  { type: 'length',           unit: 'mm' },
+  c_Pu:  { type: 'force'                         },
+  c_M2:  { type: 'moment'                        },
+  c_M1:  { type: 'moment'                        },  // new — slenderness M1/M2
+  c_Lu:  { type: 'length',           unit: 'm'  },
+
+  // Slab inputs
+  s_fc:    { type: 'stress'                      },
+  s_fy:    { type: 'stress'                      },
+  s_h:     { type: 'length',         unit: 'mm' },
+  s_db:    { type: 'length',         unit: 'mm' },
+  s_DL:    { type: 'pressure'                    },
+  s_LL:    { type: 'pressure'                    },
+  s_L:     { type: 'length',         unit: 'm'  },
+  s_Lx:    { type: 'length',         unit: 'm'  },
+  s_Ly:    { type: 'length',         unit: 'm'  },
+  s_col_w: { type: 'length',         unit: 'mm' },
+  s_col_h: { type: 'length',         unit: 'mm' },  // new — rectangular column c2
+
+  // Footing inputs
+  f_fc:    { type: 'stress'                       },
+  f_fy:    { type: 'stress'                       },
+  f_B:     { type: 'length',         unit: 'mm'  },
+  f_L:     { type: 'length',         unit: 'mm'  },
+  f_h:     { type: 'length',         unit: 'mm'  },
+  f_cc:    { type: 'length',         unit: 'mm'  },
+  f_db:    { type: 'length',         unit: 'mm'  },
+  f_cw:    { type: 'length',         unit: 'mm'  },
+  f_cl:    { type: 'length',         unit: 'mm'  },
+  f_Pu:    { type: 'force'                        },
+  f_Mu:    { type: 'moment'                       },
+  f_qa:    { type: 'pressure'                     },
+};
+
 /**
  * Convert all input values when unit system changes
  * @param {string} toSystem - "metric" or "english"
@@ -197,53 +289,9 @@ function convertAllInputs(toSystem) {
   CURRENT_UNIT_SYSTEM = toSystem;
 
   const toEnglish = toSystem === "english";
-  
-  // Mapping of input IDs to their conversion types
-  const inputConversions = {
-    // Beam inputs
-    b_b:   { type: 'length', unit: 'mm' },
-    b_h:   { type: 'length', unit: 'mm' },
-    b_cc:  { type: 'length', unit: 'mm' },
-    b_fc:  { type: 'stress' },
-    b_fy:  { type: 'stress' },
-    b_fyt: { type: 'stress' },
-    b_db:  { type: 'length', unit: 'mm' },
-    b_ds:  { type: 'length', unit: 'mm' },
-    b_dbp: { type: 'length', unit: 'mm' },
-    b_dp:  { type: 'length', unit: 'mm' },
-    b_Mu:  { type: 'moment' },
-    b_Vu:  { type: 'force' },
-    b_Tu:  { type: 'moment' },
-    b_L:   { type: 'length', unit: 'm' },
-    
-    // Column inputs
-    c_b:   { type: 'length', unit: 'mm' },
-    c_h:   { type: 'length', unit: 'mm' },
-    c_D:   { type: 'length', unit: 'mm' },
-    c_cc:  { type: 'length', unit: 'mm' },
-    c_fc:  { type: 'stress' },
-    c_fy:  { type: 'stress' },
-    c_db:  { type: 'length', unit: 'mm' },
-    c_dt:  { type: 'length', unit: 'mm' },
-    c_Pu:  { type: 'force' },
-    c_M2:  { type: 'moment' },
-    c_Lu:  { type: 'length', unit: 'm' },
-    
-    // Slab inputs
-    s_fc:    { type: 'stress' },
-    s_fy:    { type: 'stress' },
-    s_h:     { type: 'length', unit: 'mm' },
-    s_db:    { type: 'length', unit: 'mm' },
-    s_DL:    { type: 'pressure' },
-    s_LL:    { type: 'pressure' },
-    s_L:     { type: 'length', unit: 'm' },
-    s_Lx:    { type: 'length', unit: 'm' },
-    s_Ly:    { type: 'length', unit: 'm' },
-    s_col_w: { type: 'length', unit: 'mm' },
-  };
-  
+
   // Convert each input
-  Object.keys(inputConversions).forEach(id => {
+  Object.keys(FIELD_CONVERSIONS).forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     
@@ -268,6 +316,9 @@ function convertAllInputs(toSystem) {
         break;
       case 'pressure':
         convertedValue = convertPressure(currentValue, toEnglish);
+        break;
+      case 'force_per_length':
+        convertedValue = convertForcePerLength(currentValue, toEnglish);
         break;
       default:
         return;

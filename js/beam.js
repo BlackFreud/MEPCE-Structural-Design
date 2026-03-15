@@ -48,6 +48,8 @@ function calculateBeam() {
   const Mu       = getVal("b_Mu");
   const Vu       = getVal("b_Vu");
   const Tu       = getVal("b_Tu") || 0;
+  const wDL      = getVal("b_wDL") || 0;   // Service SDL (kN/m) — deflection check
+  const wLL      = getVal("b_wLL") || 0;   // Service LL  (kN/m) — deflection check
   const layers   = parseInt(getStr("b_layers"));
   const isDoubly = getStr("b_type") === "doubly";
   const isZone4  = (getStr("b_seismic") || "zone4") === "zone4";
@@ -149,6 +151,12 @@ function calculateBeam() {
   // --- Seismic hoop spacing (ACI 318-14 §18.4.2.4) ---
   const s_hoop = Math.floor(Math.min(d / 4, 8 * db, 24 * ds, 300));
 
+  // --- Deflection check (ACI 318-14 §24.2 / NSCP 2015 §424.2) ---
+  const defl = _deflectionCheck(b, h, d, fc, fy, As, Asp, L, supp, Mu, wDL, wLL);
+
+  // --- Crack control check (ACI 318-14 §24.3.2 / NSCP 2015 §424.3.2) ---
+  const crack = _crackCheck(b, d, As, cc, ds, db, n, fc, fy, defl.Ma);
+
   // --- Rebar schedule (F4) ---
   const rebarBars = [
     { mark:"T1", count:n,  dia:db,  length:`${(L*1000).toFixed(0)}mm`, location:"Tension (Bottom)" },
@@ -245,6 +253,47 @@ function calculateBeam() {
   html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub>",    Vu,  shear.PhiVc, "kN");
   html += createRow("φV<sub>c</sub> Capacity",         shear.PhiVc.toFixed(2) + " kN", "");
   html += createRow("Stirrup Design",       shear.summary, shear.pass ? "PASS" : "FAIL");
+  html += `</div></div>`;
+
+  // Deflection Section
+  html += `<div class="modern-section">
+    <div class="modern-section-divider">
+      <span class="section-divider-title">Serviceability — Deflection</span>
+      <span class="section-divider-code">ACI 318-14 §24.2 / NSCP §424.2</span>
+    </div>
+    <div class="modern-results-grid">`;
+  html += createRow("E<sub>c</sub>",                    defl.Ec.toFixed(0)   + " MPa",  "");
+  html += createRow("M<sub>cr</sub> (cracking)",        defl.Mcr.toFixed(2)  + " kNm",  "");
+  html += createRow("I<sub>g</sub> (gross)",            (defl.Ig/1e6).toFixed(0) + " ×10⁶ mm⁴", "");
+  html += createRow("I<sub>cr</sub> (cracked)",         (defl.Icr/1e6).toFixed(0) + " ×10⁶ mm⁴", "");
+  html += createRow("I<sub>e</sub> (effective)",        (defl.Ie/1e6).toFixed(0) + " ×10⁶ mm⁴", "");
+  html += createRow("M<sub>a</sub> (service moment)",   defl.Ma.toFixed(2)   + " kNm",  defl.Ma > defl.Mcr ? "CRACKED" : "UNCRACKED");
+  html += createRow("Load basis",                       defl.loadBasis,                 "");
+  html += createRow("Δ<sub>i</sub> (immediate, total)", defl.delta_i.toFixed(1) + " mm", "");
+  html += createRow("λΔ (long-term mult.)",             defl.lambdaDelta.toFixed(3),    "");
+  html += createRow("Δ<sub>lt</sub> (long-term add.)",  defl.delta_lt.toFixed(1) + " mm", "");
+  html += createRow("Δ<sub>total</sub>",                defl.delta_total.toFixed(1) + " mm", "");
+  html += createRow("Limit L/360 (live load only)",     defl.limit_live.toFixed(1) + " mm",
+    defl.delta_i_live <= defl.limit_live ? "PASS" : "FAIL");
+  html += createProgressBar("Δ<sub>live</sub> vs L/360", defl.delta_i_live, defl.limit_live, "mm");
+  html += createRow("Limit L/240 (total, sustained)",   defl.limit_total.toFixed(1) + " mm",
+    defl.delta_total <= defl.limit_total ? "PASS" : "FAIL");
+  html += createProgressBar("Δ<sub>total</sub> vs L/240", defl.delta_total, defl.limit_total, "mm");
+  html += `</div></div>`;
+
+  // Crack Control Section
+  html += `<div class="modern-section">
+    <div class="modern-section-divider">
+      <span class="section-divider-title">Serviceability — Crack Control</span>
+      <span class="section-divider-code">ACI 318-14 §24.3.2 / NSCP §424.3.2</span>
+    </div>
+    <div class="modern-results-grid">`;
+  html += createRow("Service Steel Stress (f<sub>s</sub>)", crack.fs.toFixed(1) + " MPa",   crack.fsBasis);
+  html += createRow("Clear Cover to Tension Bar (c<sub>c</sub>)", crack.cc_tens.toFixed(0) + " mm", "");
+  html += createRow("Max Allowable Spacing (s<sub>allow</sub>)", crack.s_allow.toFixed(0) + " mm",  "");
+  html += createRow("Actual Bar Spacing (s<sub>act</sub>)",      crack.s_act.toFixed(0)   + " mm",
+    crack.pass ? "PASS" : "FAIL");
+  html += createProgressBar("s<sub>act</sub> vs s<sub>allow</sub>", crack.s_act, crack.s_allow, "mm");
   html += `</div></div>`;
 
   // Seismic / Detailing Section
@@ -369,4 +418,173 @@ function _shearDesign(b, d, fc, fyt, Vu, ds) {
     }
   }
   return { PhiVc, summary, pass, spacing };
+}
+
+// =============================================================================
+// PRIVATE — Deflection Check
+// ACI 318-14 §24.2 / NSCP 2015 §424.2
+//
+// Two operating modes:
+//   MODE A (wDL + wLL entered): service loads used directly → best accuracy
+//   MODE B (wDL + wLL both 0):  Ma back-calculated from Mu/1.4 → conservative
+//
+// Deflection support multipliers (ACI R24.2.3.5 commentary):
+//   Simply supported  = 1.00   (full 5wL⁴/384EI)
+//   One end cont.     = 0.85
+//   Both ends cont.   = 0.70
+//   Cantilever        = 2.40   (wL⁴/8EI = (5/384)×2.4·wL⁴/EI)
+//
+// Long-term multiplier λΔ = ξ / (1 + 50ρ')  — ACI §24.2.4.1
+//   ξ = 2.0 for sustained loads > 5 years (conservative default)
+//
+// Deflection limits per ACI Table 24.2.2:
+//   Live load only: L / 360
+//   Total (immediate + long-term): L / 240
+// =============================================================================
+function _deflectionCheck(b, h, d, fc, fy, As, Asp, L, supp, Mu, wDL, wLL) {
+  const L_mm   = L * 1000;                           // m → mm
+
+  // --- Material properties ---
+  const Ec     = 4700 * Math.sqrt(fc);               // ACI §19.2.2 (MPa)
+  const fr     = 0.62 * Math.sqrt(fc);               // Modulus of rupture (MPa) ACI §19.2.3
+
+  // --- Section properties ---
+  const Ig     = (b * Math.pow(h, 3)) / 12;          // Gross moment of inertia (mm⁴)
+  const yt     = h / 2;                              // Dist. from centroid to extreme tension fibre
+  const Mcr    = (fr * Ig / yt) / 1e6;               // Cracking moment (kNm) ACI §24.2.3.5
+
+  // --- Cracked moment of inertia ---
+  const n      = ES / Ec;                            // Modular ratio
+  const rho    = As / (b * d);
+  const k      = Math.sqrt(2 * rho * n + Math.pow(rho * n, 2)) - rho * n;
+  const kd     = k * d;                              // Neutral axis depth (cracked)
+  const Icr    = (b * Math.pow(kd, 3)) / 3
+               + n * As * Math.pow(d - kd, 2);       // Cracked inertia (mm⁴)
+
+  // --- Service moment Ma ---
+  // Support moment coefficients (same as BEAM_DENOM map but for service loads)
+  const SERV_COEF = { 1: 1/8, 2: 1/10, 3: 1/11, 4: 1/2 };
+  const coef      = SERV_COEF[supp] || 1/10;
+
+  let Ma, wService, wLive, loadBasis;
+  if (wDL > 0 || wLL > 0) {
+    // MODE A — explicit service loads entered
+    wService  = wDL + wLL;                           // Total service load (kN/m)
+    wLive     = wLL;
+    Ma        = coef * wService * L * L;             // Service moment (kNm)
+    loadBasis = `${wDL.toFixed(1)} + ${wLL.toFixed(1)} kN/m (entered)`;
+  } else {
+    // MODE B — back-calculate from factored Mu (conservative: assume 1.4D governs)
+    wService  = Mu / (coef * L * L * 1.4);          // Implied service load (kN/m)
+    wLive     = wService * 0.5;                      // Assume 50% is live (conservative)
+    Ma        = Mu / 1.4;                            // Service moment (kNm)
+    loadBasis = `Back-calc. from Mu = ${Mu} kNm (conservative)`;
+  }
+
+  // --- Effective moment of inertia Ie — Branson's formula (ACI §24.2.3.5) ---
+  // Ie = (Mcr/Ma)³·Ig + [1−(Mcr/Ma)³]·Icr,  clamped Icr ≤ Ie ≤ Ig
+  let Ie;
+  if (Ma <= 0 || Ma <= Mcr) {
+    Ie = Ig;                                         // Uncracked — use full gross
+  } else {
+    const ratio  = Mcr / Ma;
+    const ratio3 = Math.pow(ratio, 3);
+    Ie = ratio3 * Ig + (1 - ratio3) * Icr;
+    Ie = Math.max(Icr, Math.min(Ig, Ie));            // Clamp
+  }
+
+  // --- Immediate deflections ---
+  // Base formula: Δ = 5wL⁴ / (384·Ec·Ie)   [N, mm units]
+  // Support multiplier adjusts for boundary conditions
+  const SUPP_MULT = { 1: 1.00, 2: 0.85, 3: 0.70, 4: 2.40 };
+  const suppMult  = SUPP_MULT[supp] || 1.0;
+
+  // Convert loads to N/mm for deflection formula
+  const w_total_Nmm = wService * 1000 / 1000;       // kN/m → N/mm
+  const w_live_Nmm  = wLive    * 1000 / 1000;       // kN/m → N/mm
+
+  const delta_base  = (5 * w_total_Nmm * Math.pow(L_mm, 4)) / (384 * Ec * Ie);
+  const delta_i     = delta_base * suppMult;         // Total immediate deflection (mm)
+
+  const delta_base_live = (5 * w_live_Nmm * Math.pow(L_mm, 4)) / (384 * Ec * Ie);
+  const delta_i_live    = delta_base_live * suppMult; // Live-load-only immediate deflection (mm)
+
+  // --- Long-term deflection multiplier (ACI §24.2.4.1) ---
+  // λΔ = ξ / (1 + 50·ρ')   where ξ = 2.0 (>5 years sustained, conservative)
+  const xi          = 2.0;
+  const rho_prime   = Asp / (b * d);                 // Compression steel ratio
+  const lambdaDelta = xi / (1 + 50 * rho_prime);
+
+  // Long-term additional deflection due to sustained load (dead + sustained live)
+  // Assume full dead load is sustained
+  const w_dead_Nmm  = wDL > 0 ? (wDL * 1000 / 1000) : (w_total_Nmm * 0.5);
+  const delta_dead  = ((5 * w_dead_Nmm * Math.pow(L_mm, 4)) / (384 * Ec * Ie)) * suppMult;
+  const delta_lt    = lambdaDelta * delta_dead;       // Long-term additional deflection (mm)
+
+  const delta_total = delta_i + delta_lt;            // Total deflection (mm)
+
+  // --- Limits (ACI Table 24.2.2) ---
+  const limit_live  = L_mm / 360;                    // Live load only
+  const limit_total = L_mm / 240;                    // Immediate + long-term
+
+  return {
+    Ec, fr, Ig, Icr, Ie, Mcr, Ma, loadBasis,
+    delta_i, delta_i_live, delta_lt, delta_total,
+    lambdaDelta, limit_live, limit_total,
+  };
+}
+
+// =============================================================================
+// PRIVATE — Crack Control Check
+// ACI 318-14 §24.3.2 / NSCP 2015 §424.3.2
+//
+// Controls bar spacing to limit crack widths — not a direct crack width calc.
+// Maximum allowable bar spacing:
+//   s ≤ min( 380(280/fs) − 2.5·cc ,  300(280/fs) )
+//
+// Service steel stress fs:
+//   If Ma > 0 (from deflection check):  fs = Ma / (As × jd)  ≤ fy
+//   Else (no service loads entered):     fs = (2/3) × fy  (ACI R24.3.2 default)
+//
+// cc_tens = clear cover to face of tension bar = cc_input + ds (stirrup dia)
+// Actual bar spacing s_act = c/c between bars in one layer
+// =============================================================================
+function _crackCheck(b, d, As, cc, ds, db, n, fc, fy, Ma) {
+  // --- Neutral axis factor k (elastic cracked section) ---
+  // k = √(2ρn + (ρn)²) − ρn,  n = Es/Ec
+  const Ec_act = 4700 * Math.sqrt(fc);           // Actual concrete modulus (MPa)
+  const nRat   = ES / Ec_act;                    // Modular ratio using actual fc
+  const rho    = As / (b * d);
+  const k_na   = Math.sqrt(2 * rho * nRat + Math.pow(rho * nRat, 2)) - rho * nRat;
+  const jd     = d * (1 - k_na / 3);            // Internal lever arm (mm)
+
+  // --- Service steel stress ---
+  let fs, fsBasis;
+  if (Ma > 0) {
+    fs       = Math.min((Ma * 1e6) / (As * jd), fy);
+    fsBasis  = `From M\u2090 = ${Ma.toFixed(2)} kNm`;
+  } else {
+    fs       = (2 / 3) * fy;
+    fsBasis  = `2/3 \u00D7 fy = ${fs.toFixed(1)} MPa (conservative)`;
+  }
+  // Guard against fs = 0 causing Infinity
+  fs = Math.max(fs, 1);
+
+  // --- Clear cover to tension bar face ---
+  const cc_tens = cc + ds;                       // cover to stirrup + stirrup dia = cover to main bar face
+
+  // --- Maximum allowable bar spacing (ACI 318-14 §24.3.2) ---
+  const s_max_1 = 380 * (280 / fs) - 2.5 * cc_tens;
+  const s_max_2 = 300 * (280 / fs);
+  const s_allow = Math.min(s_max_1, s_max_2);   // Governing (lower) limit
+
+  // --- Actual centre-to-centre bar spacing in tension layer ---
+  // Bars spread across: b − 2×cover − 2×stirrup_dia
+  // With n bars: (n−1) gaps between them
+  const inner_width = b - 2 * cc - 2 * ds;      // Width between stirrup legs (mm)
+  const s_act = n > 1
+    ? (inner_width - db) / (n - 1)              // c/c spacing between bar centres
+    : inner_width;                               // single bar — no spacing concern
+
+  return { fs, fsBasis, cc_tens, s_allow, s_act, pass: s_act <= s_allow };
 }
