@@ -39,7 +39,7 @@ Edit **`js/config.js`** only:
 ```js
 const PROJECT_DETAILS = {
   project: "FINAL PROPOSAL",
-  name:    "STRUCTURAL ENGINEER",
+  name:    "Structural Engineer",
   subject: "MEPCE 225",
 };
 ```
@@ -410,4 +410,4 @@ See `CHANGELOG.md` for full session-by-session detail.
 
 ---
 
-*Last updated: March 2026 · Engr. Lakatan · MEPCE 225*
+*Last updated: 2026 · University of Mindanao*
