@@ -75,6 +75,78 @@
   <div class="main-content">
 
     <!-- ============================================================
+         PRINT-ONLY: FORMAL DOCUMENT TITLE BLOCK
+         Hidden on screen — visible only when printing
+         ============================================================ -->
+    <div class="print-title-block">
+      <div class="ptb-header">
+        <div class="ptb-org">
+          <div class="ptb-org-name">STRUCTURAL DESIGN COMPUTATION SHEET</div>
+          <div class="ptb-org-sub">Prepared using Structural Design Suite · NSCP 2015 / ACI 318-14 / ASCE 7</div>
+        </div>
+        <div class="ptb-logo-box">S</div>
+      </div>
+      <div class="ptb-meta-grid">
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Project Title</span>
+          <span class="ptb-meta-value" id="ptb-project">—</span>
+        </div>
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Prepared By</span>
+          <span class="ptb-meta-value" id="ptb-name">—</span>
+        </div>
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Subject / Course</span>
+          <span class="ptb-meta-value" id="ptb-subject">—</span>
+        </div>
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Date</span>
+          <span class="ptb-meta-value" id="ptb-date">—</span>
+        </div>
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Design Standard</span>
+          <span class="ptb-meta-value">NSCP 2015 (6th Ed.) · ACI 318-14 · ASCE 7-16</span>
+        </div>
+        <div class="ptb-meta-row">
+          <span class="ptb-meta-label">Computation Type</span>
+          <span class="ptb-meta-value" id="ptb-module">—</span>
+        </div>
+      </div>
+      <div class="ptb-disclaimer">
+        These computations are generated for engineering reference purposes. All results shall be verified
+        by a licensed structural engineer prior to use in construction documents. The engineer of record
+        bears full responsibility for the application and interpretation of these results.
+      </div>
+    </div>
+
+    <!-- ============================================================
+         PRINT-ONLY: DOCUMENT FOOTER (repeats on every page)
+         ============================================================ -->
+    <div class="print-footer-block">
+      <div class="pfb-left">Structural Design Suite · NSCP 2015 / ACI 318-14</div>
+      <div class="pfb-center" id="pfb-project-label">—</div>
+      <div class="pfb-right">Page <span class="pfb-page"></span></div>
+    </div>
+
+    <!-- ============================================================
+         PRINT-ONLY: ENGINEER SIGNATURE BLOCK
+         ============================================================ -->
+    <div class="print-signature-block" id="print-signature-block">
+      <div class="psb-cell">
+        <span class="psb-label">Prepared By</span>
+        <div class="psb-line">Signature over Printed Name</div>
+      </div>
+      <div class="psb-cell">
+        <span class="psb-label">Checked By</span>
+        <div class="psb-line">Signature over Printed Name</div>
+      </div>
+      <div class="psb-cell">
+        <span class="psb-label">Approved By / Engineer of Record</span>
+        <div class="psb-line">PRC License No. &amp; Date</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
          TOPBAR
          ============================================================ -->
     <div class="topbar">
@@ -204,6 +276,15 @@
                 <span class="field-unit" data-unit-type="length_mm">(mm)</span>
               </label>
               <input type="number" class="form-input" id="b_cc" value="40" min="20">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Exposure Category</label>
+              <select class="form-select" id="b_exposure">
+                <option value="interior">Interior (not exposed)</option>
+                <option value="weather" selected>Exposed to weather</option>
+                <option value="soil">In contact with soil</option>
+              </select>
+              <span class="field-hint">NSCP 2015 Table 406.3.2.1</span>
             </div>
             <div class="form-group">
               <label class="form-label">
@@ -342,6 +423,14 @@
                 <option value="4">Cantilever (L/8)</option>
               </select>
             </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">Seismic Zone</label>
+              <select class="form-select" id="b_seismic">
+                <option value="zone4" selected>Zone 4 — Special Moment Frame (ACI §18.4)</option>
+                <option value="standard">Standard / Non-Seismic (ACI §9.7.6)</option>
+              </select>
+              <span class="field-hint">Controls confinement hoop detailing requirements</span>
+            </div>
           </div>
         </div>
 
@@ -436,6 +525,15 @@
               </label>
               <input type="number" class="form-input" id="c_cc" value="40" min="20">
             </div>
+            <div class="form-group">
+              <label class="form-label">Exposure Category</label>
+              <select class="form-select" id="c_exposure">
+                <option value="interior">Interior (not exposed)</option>
+                <option value="weather" selected>Exposed to weather</option>
+                <option value="soil">In contact with soil</option>
+              </select>
+              <span class="field-hint">NSCP 2015 Table 406.3.2.1</span>
+            </div>
           </div>
         </div>
 
@@ -487,6 +585,14 @@
               </label>
               <input type="number" class="form-input" id="c_dt" value="10" min="8">
             </div>
+            <div class="form-group">
+              <label class="form-label">
+                Max Hoop Leg Spacing h<sub>x</sub>
+                <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+              </label>
+              <input type="number" class="form-input" id="c_hx" value="200" min="50" step="10">
+              <span class="field-hint">Max c/c between hoop or crosstie legs — ACI §18.7.5.3(c)</span>
+            </div>
           </div>
         </div>
 
@@ -526,6 +632,28 @@
                 <option value="0">No (Non-Sway)</option>
                 <option value="1">Yes (Sway)</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                Eff. Length Factor k
+              </label>
+              <input type="number" class="form-input" id="c_k" value="1.0" min="0.5" max="3.0" step="0.05">
+              <span class="field-hint">1.0 non-sway (default) | ≥ 1.2 sway — ACI §6.6.4.3</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Seismic Zone</label>
+              <select class="form-select" id="c_seismic">
+                <option value="zone4" selected>Zone 4 — Special (ACI §18.7.5)</option>
+                <option value="standard">Standard / Non-Seismic (ACI §25.7.2)</option>
+              </select>
+              <span class="field-hint">Controls confinement detailing requirements</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                β<sub>dns</sub> (Sustained Load Ratio)
+              </label>
+              <input type="number" class="form-input" id="c_bdns" value="0.6" min="0" max="0.99" step="0.05">
+              <span class="field-hint">Factored sustained axial load / total factored axial load — ACI §6.6.4.4.4</span>
             </div>
           </div>
         </div>
@@ -631,6 +759,15 @@
               <input type="number" class="form-input" id="s_db" value="10" min="8">
             </div>
             <div class="form-group">
+              <label class="form-label">Exposure Category</label>
+              <select class="form-select" id="s_exposure">
+                <option value="interior" selected>Interior (not exposed)</option>
+                <option value="weather">Exposed to weather</option>
+                <option value="soil">In contact with soil</option>
+              </select>
+              <span class="field-hint">NSCP 2015 Table 406.3.2.1</span>
+            </div>
+            <div class="form-group">
               <label class="form-label">
                 SDL
                 <span class="field-unit" data-unit-type="pressure">(kPa)</span>
@@ -667,8 +804,10 @@
               <div class="form-group">
                 <label class="form-label">Support Condition</label>
                 <select class="form-select" id="s_supp">
-                  <option value="0.125">Simply Supported (L/8)</option>
-                  <option value="0.10">Continuous (L/10)</option>
+                  <option value="ss">Simply Supported (L/20)</option>
+                  <option value="oe" selected>One End Continuous (L/24)</option>
+                  <option value="be">Both Ends Continuous (L/28)</option>
+                  <option value="ca">Cantilever (L/10)</option>
                 </select>
               </div>
             </div>
@@ -701,10 +840,18 @@
               </div>
               <div class="form-group">
                 <label class="form-label">
-                  Column Width c
+                  Column Dim. c<sub>1</sub>
                   <span class="field-unit" data-unit-type="length_mm">(mm)</span>
                 </label>
-                <input type="number" class="form-input" id="s_col_w" value="400" min="200">
+                <input type="number" class="form-input" id="s_col_w" value="400" min="150" step="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  Column Dim. c<sub>2</sub>
+                  <span class="field-unit" data-unit-type="length_mm">(mm)</span>
+                </label>
+                <input type="number" class="form-input" id="s_col_h" value="400" min="150" step="50">
+                <span class="field-hint">Long dim. — same as c<sub>1</sub> for square column</span>
               </div>
               <div class="form-group">
                 <label class="form-label">Edge Condition</label>
@@ -790,6 +937,33 @@
 <script src="js/column.js"></script>
 <script src="js/slab.js"></script>
 <script src="js/main.js"></script>
+
+<script>
+// Populate print title block from PROJECT_DETAILS and live module title
+(function() {
+  function pad(n) { return n < 10 ? '0' + n : n; }
+  const now = new Date();
+  const dateStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+
+  document.getElementById('ptb-project').textContent  = PROJECT_DETAILS.project  || '—';
+  document.getElementById('ptb-name').textContent     = PROJECT_DETAILS.name     || '—';
+  document.getElementById('ptb-subject').textContent  = PROJECT_DETAILS.subject  || '—';
+  document.getElementById('ptb-date').textContent     = dateStr;
+  document.getElementById('pfb-project-label').textContent = PROJECT_DETAILS.project || '—';
+
+  // Update module label when active module changes
+  function updateModule() {
+    const active = document.querySelector('.module.active');
+    const label  = active ? active.id.charAt(0).toUpperCase() + active.id.slice(1) + ' Design' : '—';
+    const el = document.getElementById('ptb-module');
+    if (el) el.textContent = label + ' Analysis';
+  }
+  updateModule();
+  document.querySelectorAll('.nav-item').forEach(function(btn) {
+    btn.addEventListener('click', function() { setTimeout(updateModule, 50); });
+  });
+})();
+</script>
 
 </body>
 </html>

@@ -124,6 +124,18 @@ function barArea(db) {
   return Math.PI * Math.pow(db / 2, 2);
 }
 
+/**
+ * Minimum clear cover by exposure — NSCP 2015 Table 406.3.2.1 / ACI 318-14 Table 20.6.1.3.1
+ * @param {string} exposure - "interior" | "weather" | "soil"
+ * @param {number} db       - Bar diameter (mm)
+ * @returns {number} Minimum cover (mm)
+ */
+function getMinCover(exposure, db) {
+  if (exposure === "soil")    return 75;
+  if (exposure === "weather") return db > 20 ? 50 : 40;
+  return 20;  // interior — not exposed
+}
+
 // =============================================================================
 // UNIT CONVERSION FUNCTIONS
 // =============================================================================
@@ -135,7 +147,6 @@ function barArea(db) {
  * @param {string} type - "mm" or "m"
  * @returns {number} Converted value
  */
-/* 
 function convertLength(value, toEnglish, type = "mm") {
   if (type === "mm") {
     return toEnglish ? value * UNIT_CONVERSIONS.mm_to_in : value / UNIT_CONVERSIONS.mm_to_in;
@@ -144,46 +155,21 @@ function convertLength(value, toEnglish, type = "mm") {
   }
 }
 
-/**
- * Convert stress values (MPa ↔ ksi)
- * @param {number} value - Input value
- * @param {boolean} toEnglish - true = MPa→ksi, false = ksi→MPa
- * @returns {number} Converted value
- 
 function convertStress(value, toEnglish) {
   return toEnglish ? value * UNIT_CONVERSIONS.MPa_to_ksi : value / UNIT_CONVERSIONS.MPa_to_ksi;
 }
 
-/**
- * Convert force values (kN ↔ kip)
- * @param {number} value - Input value
- * @param {boolean} toEnglish - true = kN→kip, false = kip→kip
- * @returns {number} Converted value
- 
 function convertForce(value, toEnglish) {
   return toEnglish ? value * UNIT_CONVERSIONS.kN_to_kip : value / UNIT_CONVERSIONS.kN_to_kip;
 }
 
-/**
- * Convert moment values (kNm ↔ kip-ft)
- * @param {number} value - Input value
- * @param {boolean} toEnglish - true = kNm→kip-ft, false = kip-ft→kNm
- * @returns {number} Converted value
- 
 function convertMoment(value, toEnglish) {
   return toEnglish ? value * UNIT_CONVERSIONS.kNm_to_kipft : value / UNIT_CONVERSIONS.kNm_to_kipft;
 }
 
-/**
- * Convert pressure values (kPa ↔ psf)
- * @param {number} value - Input value
- * @param {boolean} toEnglish - true = kPa→psf, false = psf→kPa
- * @returns {number} Converted value
- 
 function convertPressure(value, toEnglish) {
   return toEnglish ? value * UNIT_CONVERSIONS.kPa_to_psf : value / UNIT_CONVERSIONS.kPa_to_psf;
 }
-*/
 // =============================================================================
 // DOM UPDATE FUNCTIONS
 // =============================================================================
@@ -206,6 +192,10 @@ function updateUnitLabels(system) {
  * @param {string} toSystem - "metric" or "english"
  */
 function convertAllInputs(toSystem) {
+  // No-op guard — prevents double-conversion if system hasn't changed
+  if (toSystem === CURRENT_UNIT_SYSTEM) return;
+  CURRENT_UNIT_SYSTEM = toSystem;
+
   const toEnglish = toSystem === "english";
   
   // Mapping of input IDs to their conversion types

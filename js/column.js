@@ -30,13 +30,24 @@ function calculateColumn() {
   const nb    = getVal("c_nb");
   const db    = getVal("c_db");
   const dt    = getVal("c_dt");
+  const hx    = getVal("c_hx") || 200;     // Max hoop leg spacing — ACI §18.7.5.3(c)
   const Pu    = getVal("c_Pu");
   const Mu    = getVal("c_M2");
   const Lu    = getVal("c_Lu") * 1000;   // m → mm
   const sway  = parseInt(getStr("c_sway"));
-  const shape = getStr("c_shape");
-  const tie   = getStr("c_tie");
-  const cc    = getVal("c_cc");           // C3: read actual cover input
+  // Effective length factor k — ACI 318-14 §6.6.4.3
+  // Non-sway: k ≤ 1.0  |  Sway: k ≥ 1.0 (1.2 minimum per commentary)
+  const k_raw  = getVal("c_k")    || (sway ? 1.2 : 1.0);
+  const k_eff  = sway ? Math.max(k_raw, 1.0) : Math.min(k_raw, 1.0);
+  // Seismic zone — controls §18 vs §25 detailing
+  const seismic = getStr("c_seismic") || "zone4";
+  const isZone4 = seismic === "zone4";
+  // Sustained load ratio — ACI 318-14 §6.6.4.4.4
+  const bdns   = Math.min(Math.max(getVal("c_bdns") || 0.6, 0), 0.99);
+  const shape    = getStr("c_shape");
+  const tie      = getStr("c_tie");
+  const cc       = getVal("c_cc");            // Actual cover input
+  const exposure = getStr("c_exposure") || "weather";
 
   // Geometry
   const b = getVal("c_b"), h = getVal("c_h"), D = getVal("c_D");
@@ -44,13 +55,18 @@ function calculateColumn() {
   const Ag   = shape === "rect" ? b * h : Math.PI * Math.pow(D / 2, 2);
   const As_t = nb * barArea(db);
 
+  // --- Cover adequacy (NSCP 2015 Table 406.3.2.1 / ACI 318-14 Table 20.6.1.3.1) ---
+  const cc_min = getMinCover(exposure, db);
+  const cc_ok  = cc >= cc_min;
+
   // ==========================================================================
   // SLENDERNESS (ACI 318-14 §6.2.5.1)
   // r = 0.3h (rect) or 0.25D (circ)
-  // Limit: 34 non-sway, 22 sway
+  // Limit: 34 non-sway (conservative, M1/M2 ratio not yet input)
+  //        22 sway
   // ==========================================================================
   const r         = shape === "rect" ? 0.3 * dim : 0.25 * D;
-  const klr       = (1.0 * Lu) / r;
+  const klr       = (k_eff * Lu) / r;
   const slenLimit = sway ? 22 : 34;
   const isSlender = klr > slenLimit;
 
@@ -62,7 +78,7 @@ function calculateColumn() {
 
   // ==========================================================================
   // MOMENT MAGNIFICATION — non-sway (ACI 318-14 §6.6.4.4)
-  // EI = 0.4·Ec·Ig (conservative, no creep)
+  // EI = (0.4·Ec·Ig) / (1 + βdns)   — includes creep reduction
   // δns = 1/(1 − Pu/(0.75·Pc)) ≥ 1.0
   // ==========================================================================
   let delta = 1.0;
@@ -71,7 +87,7 @@ function calculateColumn() {
     const Ig  = shape === "rect"
       ? (b * Math.pow(h, 3)) / 12
       : (Math.PI * Math.pow(D, 4)) / 64;
-    const EI  = 0.4 * Ec * Ig;
+    const EI  = (0.4 * Ec * Ig) / (1 + bdns);   // ACI §6.6.4.4.4 — creep factor applied
     const Pc  = (Math.PI * Math.PI * EI) / (Lu * Lu) / 1000;
     const den = 1 - Pu / (0.75 * Pc);
     delta = den > 0 ? Math.max(1.0 / den, 1.0) : 2.5;
@@ -81,7 +97,7 @@ function calculateColumn() {
   // ==========================================================================
   // P-M INTERACTION (C2: clean linear c-sweep, C3: uses cc input)
   // ==========================================================================
-  const pmPoints = _buildPMCurve(shape, b, h, D, fc, fy, nb, db, cc, Ag, As_t);
+  const pmPoints = _buildPMCurve(shape, b, h, D, fc, fy, nb, db, dt, cc, Ag, As_t);
   const inside   = _isDemandInside(pmPoints, Mc, Pu);
 
   // ==========================================================================
@@ -98,16 +114,18 @@ function calculateColumn() {
   // so ≤ min(b_min/4, 6db, 150mm)
   // ==========================================================================
   const b_min = shape === "rect" ? Math.min(b, h) : D;
-  
-  // 1. Confinement hoop spacing (so) at joints (ACI 318-14 §18.7.5.3)
-  const so = Math.floor(Math.min(b_min / 4, 6 * db, 150));
-  
-  // 2. Confinement length (lo) from joint face (ACI 318-14 §18.7.5.1)
-  // Lu is already in mm
-  const lo = Math.ceil(Math.max(b_min, Lu / 6, 450));
-  
-  // 3. Standard tie spacing (s) outside confinement zone (ACI 318-14 §25.7.2.1)
+
+  // 3. Standard tie spacing (s) — ACI 318-14 §25.7.2.1 (always computed)
   const s_std = Math.floor(Math.min(16 * db, 48 * dt, b_min));
+
+  // 1 & 2. Special confinement — ACI 318-14 §18.7.5 (Zone 4 only)
+  let so, so_c, lo;
+  if (isZone4) {
+    // (a) b_min/4  (b) 6×db  (c) 100 + (350−hx)/3  clamped [100,150]
+    so_c = Math.min(Math.max(100 + (350 - hx) / 3, 100), 150);
+    so   = Math.floor(Math.min(b_min / 4, 6 * db, so_c));
+    lo   = Math.ceil(Math.max(b_min, Lu / 6, 450));
+  }
 
   // Reinforcement ratio check
   const rho_g = As_t / Ag;
@@ -115,9 +133,13 @@ function calculateColumn() {
   // Rebar schedule (F4)
   const rebarBars = [
     { mark:"L1", count:nb,  dia:db, length:"Full height", location:"Longitudinal" },
-    { mark:"T1", count:"—", dia:dt, length:"Per spacing", location:`Hoops @ ${so}mm (within ${lo}mm from ends)` },
-    { mark:"T2", count:"—", dia:dt, length:"Per spacing", location:`Ties @ ${s_std}mm (mid-height)` },
   ];
+  if (isZone4) {
+    rebarBars.push({ mark:"T1", count:"—", dia:dt, length:"Per spacing", location:`Hoops @ ${so}mm (within ${lo}mm from ends)` });
+    rebarBars.push({ mark:"T2", count:"—", dia:dt, length:"Per spacing", location:`Ties @ ${s_std}mm (mid-height)` });
+  } else {
+    rebarBars.push({ mark:"T1", count:"—", dia:dt, length:"Per spacing", location:`Ties @ ${s_std}mm o.c. (standard)` });
+  }
   // ==========================================================================
   // BUILD MODERN HTML
   // ==========================================================================
@@ -174,10 +196,12 @@ function calculateColumn() {
       <span class="section-divider-title">Section Properties</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Gross Area (A<sub>g</sub>)",      Ag.toFixed(0) + " mm²", "");
-  html += createRow("Total Steel (A<sub>st</sub>)",   As_t.toFixed(0) + " mm²", "");
+  html += createRow("Gross Area (A<sub>g</sub>)",      Ag.toFixed(0)   + " mm²", "");
+  html += createRow("Total Steel (A<sub>st</sub>)",    As_t.toFixed(0) + " mm²", "");
   html += createRow("Steel Ratio (ρ<sub>g</sub>)",     (rho_g * 100).toFixed(2) + " %",
     rho_g >= 0.01 && rho_g <= 0.08 ? "PASS" : "FAIL");
+  html += createRow("Clear Cover Provided",            cc.toFixed(0)     + " mm", "");
+  html += createRow("Min Cover Required (exposure)",   cc_min.toFixed(0) + " mm", cc_ok ? "PASS" : "FAIL");
   html += `</div></div>`;
 
   // Slenderness
@@ -187,9 +211,12 @@ function calculateColumn() {
       <span class="section-divider-code">ACI 318-14 §6.2.5</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("kl/r",               klr.toFixed(2),           isSlender ? "SLENDER" : "SHORT");
-  if (isSlender && !sway)
-    html += createRow("Magnification (δ<sub>ns</sub>)", delta.toFixed(3),       "");
+  html += createRow("Eff. Length Factor (k)",  k_eff.toFixed(2),         sway ? "SWAY" : "NON-SWAY");
+  html += createRow("kl/r",                    klr.toFixed(2),           isSlender ? "SLENDER" : "SHORT");
+  if (isSlender && !sway) {
+    html += createRow("β<sub>dns</sub> (creep)", bdns.toFixed(2),         "");
+    html += createRow("Magnification (δ<sub>ns</sub>)", delta.toFixed(3), "");
+  }
   html += createRow("Design Moment (M<sub>c</sub>)",  Mc.toFixed(2) + " kNm",  "");
   html += `</div></div>`;
 
@@ -208,17 +235,25 @@ function calculateColumn() {
   html += `</div></div>`;
 
   // Confinement
-  // Seismic Detailing
+  // Seismic / Tie Detailing
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-title">Seismic Detailing — Zone 4</span>
-      <span class="section-divider-code">ACI 318-14 §18.7.5</span>
+      <span class="section-divider-title">${isZone4 ? "Seismic Detailing — Zone 4" : "Tie Detailing — Standard"}</span>
+      <span class="section-divider-code">${isZone4 ? "ACI 318-14 §18.7.5" : "ACI 318-14 §25.7.2"}</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Tie Type",              tie === "spiral" ? "Spiral" : "Rectangular Tie", "");
-  html += createRow("Confinement Zone (l<sub>o</sub>)", `${lo} mm from each joint`, "");
-  html += createRow("Hoops @ Ends (s<sub>o</sub>)",     `${dt}mm Ø @ ${so}mm o.c.`, "");
-  html += createRow("Ties @ Mid-Height (s)", `${dt}mm Ø @ ${s_std}mm o.c.`, "");
+  html += createRow("Tie Type", tie === "spiral" ? "Spiral" : "Rectangular Tie", "");
+  if (isZone4) {
+    html += createRow("Confinement Zone (l<sub>o</sub>)",        `${lo} mm from each joint`,                       "");
+    html += createRow("s<sub>o</sub> — Cond. (a) b<sub>min</sub>/4", `${Math.floor(b_min / 4)} mm`,               "");
+    html += createRow("s<sub>o</sub> — Cond. (b) 6d<sub>b</sub>",    `${Math.floor(6 * db)} mm`,                  "");
+    html += createRow("s<sub>o</sub> — Cond. (c) hx-based",     `${Math.floor(so_c)} mm  (h<sub>x</sub>=${hx}mm)`, "");
+    html += createRow("Hoops @ Ends — Governing s<sub>o</sub>",  `${dt}mm Ø @ ${so}mm o.c.`,                      "");
+    html += createRow("Ties @ Mid-Height (s)",                   `${dt}mm Ø @ ${s_std}mm o.c.`,                   "");
+  } else {
+    html += createRow("Standard Tie Spacing (s)",                `${dt}mm Ø @ ${s_std}mm o.c.`,                   "");
+    html += createRow("Governs",                                 `min(16d<sub>b</sub>, 48d<sub>t</sub>, b<sub>min</sub>)`, "");
+  }
   html += `</div></div>`;
 
   // Rebar Schedule
@@ -243,12 +278,12 @@ function calculateColumn() {
 // C3: Uses actual cc from input.
 // ACI 318-14 §22.4
 // =============================================================================
-function _buildPMCurve(shape, b, h, D, fc, fy, nb, db, cc, Ag, As_t) {
+function _buildPMCurve(shape, b, h, D, fc, fy, nb, db, dt, cc, Ag, As_t) {
   const dim    = shape === "rect" ? h : D;
   const beta1  = getBeta1(fc);
-  // C3: derive d and d' from actual cover input
-  const d_eff  = dim - cc - 10 - db / 2;
-  const d_p    = cc + 10 + db / 2;
+  // Derive d_eff and d' from actual cover and tie diameter inputs
+  const d_eff  = dim - cc - dt - db / 2;
+  const d_p    = cc  + dt + db / 2;
   const As_f   = As_t / 2;
 
   const Pn_max = 0.80 * (0.85 * fc * (Ag - As_t) + As_t * fy);

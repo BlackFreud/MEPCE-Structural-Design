@@ -33,22 +33,24 @@ function calculateBeam() {
   ];
   if (!validateFields(fields)) return;
 
-  const b      = getVal("b_b");
-  const h      = getVal("b_h");
-  const cc     = getVal("b_cc");
-  const fc     = getVal("b_fc");
-  const fy     = getVal("b_fy");
-  const fyt    = getVal("b_fyt");
-  const L      = getVal("b_L");
-  const supp   = parseInt(getStr("b_supp"));
-  const db     = getVal("b_db");
-  const n      = getVal("b_n");
-  const ds     = getVal("b_ds");
-  const Mu     = getVal("b_Mu");
-  const Vu     = getVal("b_Vu");
-  const Tu     = getVal("b_Tu") || 0;
-  const layers = parseInt(getStr("b_layers"));
+  const b        = getVal("b_b");
+  const h        = getVal("b_h");
+  const cc       = getVal("b_cc");
+  const exposure = getStr("b_exposure") || "weather";
+  const fc       = getVal("b_fc");
+  const fy       = getVal("b_fy");
+  const fyt      = getVal("b_fyt");
+  const L        = getVal("b_L");
+  const supp     = parseInt(getStr("b_supp"));
+  const db       = getVal("b_db");
+  const n        = getVal("b_n");
+  const ds       = getVal("b_ds");
+  const Mu       = getVal("b_Mu");
+  const Vu       = getVal("b_Vu");
+  const Tu       = getVal("b_Tu") || 0;
+  const layers   = parseInt(getStr("b_layers"));
   const isDoubly = getStr("b_type") === "doubly";
+  const isZone4  = (getStr("b_seismic") || "zone4") === "zone4";
 
   let np = 0, dbp = 0, dp = 0;
   if (isDoubly) {
@@ -98,6 +100,18 @@ function calculateBeam() {
   const As    = n  * barArea(db);
   const Asp   = isDoubly ? np * barArea(dbp) : 0;
   const beta1 = getBeta1(fc);
+
+  // --- Minimum steel area (ACI 318-14 §9.6.1.2 / NSCP 2015 §409.6.1.2) ---
+  // As_min = max( (0.25*sqrt(fc')/fy)*bw*d,  (1.4/fy)*bw*d )
+  const As_min    = Math.max(
+    (0.25 * Math.sqrt(fc) / fy) * b * d,
+    (1.4  / fy)                 * b * d
+  );
+  const As_min_ok = As >= As_min;
+
+  // --- Cover adequacy (NSCP 2015 Table 406.3.2.1 / ACI 318-14 Table 20.6.1.3.1) ---
+  const cc_min    = getMinCover(exposure, db);
+  const cc_ok     = cc >= cc_min;
 
   // --- Serviceability: min thickness (NSCP 2015 Table 409.3.1.1) ---
   const denom  = BEAM_DENOM[supp] || 16;
@@ -173,10 +187,15 @@ function calculateBeam() {
   html += `<div class="modern-section">
     <div class="modern-section-divider">
       <span class="section-divider-title">Geometry</span>
+      <span class="section-divider-code">ACI 318-14 §9.6.1.2 / NSCP §409.6.1.2</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Effective Depth (d)",    d.toFixed(1)  + " mm",  "");
-  html += createRow("Tension Steel (A<sub>s</sub>)",     As.toFixed(0) + " mm²", "");
+  html += createRow("Effective Depth (d)",                    d.toFixed(1)      + " mm",  "");
+  html += createRow("Clear Cover Provided",                   cc.toFixed(0)     + " mm",  "");
+  html += createRow("Min Cover Required (exposure)",          cc_min.toFixed(0) + " mm",  cc_ok ? "PASS" : "FAIL");
+  html += createRow("Tension Steel (A<sub>s</sub>)",          As.toFixed(0)     + " mm²", "");
+  html += createRow("A<sub>s,min</sub> Required",             As_min.toFixed(0) + " mm²", "");
+  html += createRow("A<sub>s</sub> vs A<sub>s,min</sub>",     As.toFixed(0)     + " mm²", As_min_ok ? "PASS" : "FAIL");
   if (isDoubly) {
     html += createRow("Comp. Steel (A<sub>s</sub>')",    Asp.toFixed(0) + " mm²",  "");
     html += createRow("Comp. Steel Stress",   flex.fspText,              "");
@@ -203,6 +222,14 @@ function calculateBeam() {
     <div class="modern-results-grid">`;
   html += createRow("Neutral Axis (c)",     c.toFixed(1)   + " mm",  "");
   html += createRow("Net Tensile Strain",   et.toFixed(5),            et >= 0.005 ? "DUCTILE" : "TRANSITION");
+  if (isDoubly) {
+    html += createRow(
+      "ε<sub>s</sub> tension vs ε<sub>y</sub>",
+      flex.tensText,
+      flex.tensYield ? "YIELD" : "WARN"
+    );
+    html += createRow("Comp. Steel Strain",   flex.fspText,   "");
+  }
   html += createRow("Strength Factor (φ)",  phi.toFixed(3),           "");
   html += createProgressBar("φM<sub>n</sub> vs M<sub>u</sub>",    Mu, PhiMn,    "kNm");
   html += createRow("φM<sub>n</sub> Capacity",         PhiMn.toFixed(2) + " kNm", PhiMn >= Mu ? "SAFE" : "UNSAFE");
@@ -220,14 +247,21 @@ function calculateBeam() {
   html += createRow("Stirrup Design",       shear.summary, shear.pass ? "PASS" : "FAIL");
   html += `</div></div>`;
 
-  // Seismic Detailing Section
+  // Seismic / Detailing Section
   html += `<div class="modern-section">
     <div class="modern-section-divider">
-      <span class="section-divider-title">Seismic Detailing — Zone 4</span>
-      <span class="section-divider-code">ACI 318-14 §18.4.2</span>
+      <span class="section-divider-title">${isZone4 ? "Seismic Detailing — Zone 4" : "Detailing — Standard"}</span>
+      <span class="section-divider-code">${isZone4 ? "ACI 318-14 §18.4.2" : "ACI 318-14 §9.7.6"}</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Confinement Hoop Spacing", `${ds}mm Ø @ ${s_hoop}mm o.c.`, "");
+  if (isZone4) {
+    html += createRow("Confinement Hoop Spacing", `${ds}mm Ø @ ${s_hoop}mm o.c.`, "");
+    html += createRow("Hoop Limit",               `min(d/4, 8d<sub>b</sub>, 24d<sub>s</sub>, 300mm)`, "");
+  } else {
+    const s_std_beam = Math.floor(Math.min(d / 2, 600));
+    html += createRow("Standard Max Stirrup Spacing", `${ds}mm Ø @ ${s_std_beam}mm o.c.`, "");
+    html += createRow("Note", "Special seismic detailing not required", "");
+  }
   html += `</div></div>`;
 
   // Torsion Section (if applicable)
@@ -280,14 +314,24 @@ function _doublyFlex(As, Asp, b, d, dp, fc, fy, beta1) {
     c -= res / (0.85 * fc * beta1 * b);
     if (c <= 0) { c = 1; break; }
   }
-  const esp    = MAX_CONCRETE_STRAIN * (c - dp) / c;
-  const fsp    = steelStress(esp, fy);
-  const Cc     = 0.85 * fc * beta1 * c * b;
-  const Cs     = Asp * (fsp - 0.85 * fc);
-  const Mn     = (Cc * (d - (beta1 * c) / 2) + Cs * (d - dp)) / 1e6;
-  const et     = MAX_CONCRETE_STRAIN * (d - c) / c;
+  const esp     = MAX_CONCRETE_STRAIN * (c - dp) / c;
+  const fsp     = steelStress(esp, fy);
+  const Cc      = 0.85 * fc * beta1 * c * b;
+  const Cs      = Asp * (fsp - 0.85 * fc);
+  const Mn      = (Cc * (d - (beta1 * c) / 2) + Cs * (d - dp)) / 1e6;
+  const et      = MAX_CONCRETE_STRAIN * (d - c) / c;
   const fspText = `${fsp.toFixed(1)} MPa — ${Math.abs(fsp) >= fy ? "YIELD" : "ELASTIC"}`;
-  return { Mn, et, c, fspText };
+
+  // --- Tension steel yield verification (ACI 318-14 §22.3) ---
+  // Assumption T = As·fy is valid only if εs_tension ≥ εy = fy/Es
+  const ey         = fy / ES;
+  const es_tens    = MAX_CONCRETE_STRAIN * (d - c) / c;  // same as et
+  const tensYield  = es_tens >= ey;
+  const tensText   = tensYield
+    ? `${es_tens.toFixed(5)} — YIELD`
+    : `${es_tens.toFixed(5)} — ELASTIC (εy=${ey.toFixed(5)})`;
+
+  return { Mn, et, c, fspText, tensYield, tensText };
 }
 
 // =============================================================================
@@ -313,7 +357,12 @@ function _shearDesign(b, d, fc, fyt, Vu, ds) {
     } else {
       const s_calc  = (Av * fyt * d) / (Vs_req * 1000);
       const Vs_lim2 = (0.33 * Math.sqrt(fc) * b * d) / 1000;
-      const s_max   = Math.min(Vs_req > Vs_lim2 ? d / 4 : d / 2, 600);
+      // ACI 318-14 §9.7.6.2.2:
+      //   Vs > 0.33√fc'·bw·d  →  s_max = min(d/4, 300mm)
+      //   Vs ≤ 0.33√fc'·bw·d  →  s_max = min(d/2, 600mm)
+      const s_max = Vs_req > Vs_lim2
+        ? Math.min(d / 4, 300)
+        : Math.min(d / 2, 600);
       const s_final = Math.floor(Math.min(s_calc, s_max));
       spacing = `${s_final}mm`;
       summary = `Use ${ds}mm Ø stirrups @ ${s_final}mm o.c.`;

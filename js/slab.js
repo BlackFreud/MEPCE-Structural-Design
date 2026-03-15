@@ -159,18 +159,28 @@ function calculateSlab() {
   ];
   if (!validateFields(fields)) return;
 
-  const fc   = getVal("s_fc");
-  const fy   = getVal("s_fy");
-  const h    = getVal("s_h");
-  const db   = getVal("s_db");
-  const DL   = getVal("s_DL");
-  const LL   = getVal("s_LL");
-  const mode = getStr("s_mode");
+  const fc       = getVal("s_fc");
+  const fy       = getVal("s_fy");
+  const h        = getVal("s_h");
+  const db       = getVal("s_db");
+  const DL       = getVal("s_DL");
+  const LL       = getVal("s_LL");
+  const mode     = getStr("s_mode");
+  const exposure = getStr("s_exposure") || "interior";
 
-  // d = h − cover − db/2
-  const d  = h - SLAB_COVER - db / 2;
-  // wu = 1.2(SDL + γc·h) + 1.6·LL — NSCP 2015 §205
-  const wu = 1.2 * (DL + GAMMA_CONCRETE * h / 1000) + 1.6 * LL;
+  // Cover — dynamic from exposure category (NSCP 2015 Table 406.3.2.1)
+  // SLAB_COVER (20mm) retained as absolute minimum floor
+  const cc_min = Math.max(getMinCover(exposure, db), SLAB_COVER);
+  const d      = h - cc_min - db / 2;
+
+  // Load combinations — NSCP 2015 §205.3.1 / ASCE 7-16 §2.3.1
+  // Combo 1: 1.4D
+  // Combo 2: 1.2D + 1.6L
+  // wu = governing (maximum) combination
+  const wu_14D  = 1.4 * (DL + GAMMA_CONCRETE * h / 1000);
+  const wu_12D  = 1.2 * (DL + GAMMA_CONCRETE * h / 1000) + 1.6 * LL;
+  const wu      = Math.max(wu_14D, wu_12D);
+  const wu_govn = wu === wu_14D ? "1.4D" : "1.2D + 1.6L";
 
   let html = `
     <div class="modern-result-header">
@@ -190,10 +200,14 @@ function calculateSlab() {
   html += `<div class="modern-section">
     <div class="modern-section-divider">
       <span class="section-divider-title">Section Properties</span>
+      <span class="section-divider-code">NSCP 2015 §205.3.1</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Effective Depth (d)", d.toFixed(1) + " mm",   "");
-  html += createRow("Factored Load (w<sub>u</sub>)",  wu.toFixed(3) + " kPa", "");
+  html += createRow("Effective Depth (d)",              d.toFixed(1)      + " mm",  "");
+  html += createRow("Clear Cover (exposure-based)",     cc_min.toFixed(0) + " mm",  "");
+  html += createRow("1.4D",                             wu_14D.toFixed(3) + " kPa", "");
+  html += createRow("1.2D + 1.6L",                     wu_12D.toFixed(3) + " kPa", "");
+  html += createRow("Factored Load (w<sub>u</sub>)",    wu.toFixed(3)  + " kPa", wu_govn);
   html += `</div></div>`;
 
   html += mode === "1" ? _oneWay(fc, fy, h, db, d, wu) : _twoWay(fc, fy, h, db, d, wu);
@@ -201,13 +215,15 @@ function calculateSlab() {
 
   // For one-way, draw slab section after DOM paints
   if (mode === "1") {
-    const L_val   = getVal("s_L") || 0;
-    const s_main  = _solveSpacing(
-      parseFloat(getStr("s_supp")) * wu * L_val * L_val,
-      h - SLAB_COVER - db / 2, fc, fy, db, h
+    const L_val    = getVal("s_L") || 0;
+    const suppKey  = getStr("s_supp");
+    const support  = SUPPORT_MAP[suppKey] || SUPPORT_MAP.oe;
+    const s_main   = _solveSpacing(
+      support.coef * wu * L_val * L_val,
+      h - cc_min - db / 2, fc, fy, db, h
     );
     renderResults("slab-results", html, () => {
-      drawSlabSection("slabCanvas", h, db, SLAB_COVER, s_main, L_val * 1000);
+      drawSlabSection("slabCanvas", h, db, cc_min, s_main, L_val * 1000);
     });
   } else {
     renderResults("slab-results", html);
@@ -220,16 +236,24 @@ function calculateSlab() {
 
 /**
  * As_min for temperature/shrinkage — ACI 318-14 §24.4.3.2
- * ρ_min = 0.0018 for Grade 275–420
+ * fy < 420 MPa  -> rho_min = 0.0020
+ * fy >= 420 MPa -> rho_min = max(0.0018 * 420 / fy, 0.0014)
+ * @param {number} h  - Slab thickness (mm)
+ * @param {number} fy - Steel yield strength (MPa)
  */
-function _asMin(h) { return 0.0018 * 1000 * h; }
+function _asMin(h, fy) {
+  const rho = fy < 420
+    ? 0.0020
+    : Math.max(0.0018 * 420 / fy, 0.0014);
+  return rho * 1000 * h;
+}
 
 /**
  * Solve bar spacing for a 1-m-wide strip.
  * Max spacing: lesser of 3h or 450 mm — ACI 318-14 §8.7.2.2
  */
 function _solveSpacing(Mu_strip, d, fc, fy, db, h) {
-  const As_min = _asMin(h);
+  const As_min = _asMin(h, fy);
   let As = As_min;
 
   if (Mu_strip > 0) {
@@ -250,15 +274,29 @@ function _solveSpacing(Mu_strip, d, fc, fy, db, h) {
 // =============================================================================
 // ONE-WAY SLAB
 // =============================================================================
+
+/**
+ * Support condition lookup — ACI 318-14 Table 7.3.1.1 & moment coefficients
+ * coef  = factored moment coefficient  (Mu = coef × wu × L²)
+ * denom = min-thickness denominator    (h_min = L/denom × modifier)
+ */
+const SUPPORT_MAP = {
+  ss: { coef: 1 / 8,  denom: 20 },   // Simply supported
+  oe: { coef: 1 / 10, denom: 24 },   // One end continuous
+  be: { coef: 1 / 11, denom: 28 },   // Both ends continuous
+  ca: { coef: 1 / 2,  denom: 10 },   // Cantilever
+};
+
 function _oneWay(fc, fy, h, db, d, wu) {
   if (!validateFields([{ id:"s_L", label:"Span", min:0.5 }])) return "";
 
-  const L    = getVal("s_L");
-  const coef = parseFloat(getStr("s_supp"));   // 0.125 or 0.10
+  const L       = getVal("s_L");
+  const suppKey = getStr("s_supp");
+  const support = SUPPORT_MAP[suppKey] || SUPPORT_MAP.oe;  // fallback to one-end continuous
+  const coef    = support.coef;
 
-  // Min thickness — ACI 318-14 Table 7.3.1.1
-  const h_min_denom = coef === 0.125 ? 20 : 24;
-  const h_min = (L * 1000 / h_min_denom) * (0.4 + fy / 700);
+  // Min thickness — ACI 318-14 Table 7.3.1.1 / NSCP 2015 Table 406.3.1.1
+  const h_min = (L * 1000 / support.denom) * (0.4 + fy / 700);
 
   // Moment (uses selected coefficient — C1 fix already in place)
   const Mu_pos = coef * wu * L * L;
@@ -330,14 +368,16 @@ function _oneWay(fc, fy, h, db, d, wu) {
 // =============================================================================
 function _twoWay(fc, fy, h, db, d, wu) {
   if (!validateFields([
-    { id:"s_Lx",    label:"Short span Lx", min:1   },
-    { id:"s_Ly",    label:"Long span Ly",  min:1   },
-    { id:"s_col_w", label:"Column width",  min:150 },
+    { id:"s_Lx",    label:"Short span Lx",    min:1   },
+    { id:"s_Ly",    label:"Long span Ly",      min:1   },
+    { id:"s_col_w", label:"Column dim. c1",    min:150 },
+    { id:"s_col_h", label:"Column dim. c2",    min:150 },
   ])) return "";
 
   const Lx    = getVal("s_Lx");
   const Ly    = getVal("s_Ly");
   const col_w = getVal("s_col_w");
+  const col_h = getVal("s_col_h") || col_w;  // fallback = square
   
   // Ensure Lx ≤ Ly (Lx is short span)
   if (Lx > Ly) {
@@ -357,20 +397,41 @@ function _twoWay(fc, fy, h, db, d, wu) {
   
   // ==========================================================================
   // MIN THICKNESS CHECK — ACI 318-14 Table 8.3.1.1
-  // For flat plates without edge beams: h_min = Ln/30 (fy=414), adjust for fy
+  // Flat plate (no drop panels, no edge beams):
+  //   h_min = Ln × (0.8 + fy/1400) / 36   (fy in MPa)
+  //   absolute minimum: 125 mm
+  //   Ln = clear span in short direction
   // ==========================================================================
-  const Ln      = Lx * 1000 - col_w;  // Clear span (mm)
-  const h_min_base = Ln / 30;
-  const h_min   = h_min_base * (0.4 + fy / 700);  // Modification for fy ≠ 414
+  const Ln    = Lx * 1000 - col_w;  // Clear span in short direction (mm)
+  const h_min = Math.max((Ln * (0.8 + fy / 1400)) / 36, 125);
   
   // ==========================================================================
-  // PUNCHING SHEAR — ACI 318-14 §22.6
-  // Critical perimeter bo at d/2 from column face
+  // PUNCHING SHEAR — ACI 318-14 §22.6.5.2
+  // Critical perimeter bo at d/2 from column face (rectangular column)
+  //   bo = 2(c1 + d) + 2(c2 + d) = 2(c1 + c2 + 2d)
+  // Three equations — governing is the MINIMUM:
+  //   (a) Vc = 0.083(2 + 4/βc)    √fc' · bo · d
+  //   (b) Vc = 0.083(2 + αs·d/bo) √fc' · bo · d
+  //   (c) Vc = 0.33               √fc' · bo · d
+  // βc  = long/short column dim ratio
+  // αs  = 40 interior | 30 edge | 20 corner → 40 assumed (interior, conservative)
   // ==========================================================================
-  const bo    = 4 * (col_w + d);
-  const Vu_p  = wu * Lx * Ly;
-  const Vc_p  = (0.33 * Math.sqrt(fc) * bo * d) / 1000;
-  const PhiVc = PHI_SHEAR * Vc_p;
+  const bo      = 2 * (col_w + col_h + 2 * d);
+  const Vu_p    = wu * Lx * Ly;
+  const beta_c  = Math.max(col_w, col_h) / Math.min(col_w, col_h);
+  const alphaS  = 40;    // Interior column — conservative default
+  const sqrtFc  = Math.sqrt(fc);
+
+  const Vc_a    = 0.083 * (2 + 4  / beta_c)          * sqrtFc * bo * d / 1000;
+  const Vc_b    = 0.083 * (2 + (alphaS * d) / bo)    * sqrtFc * bo * d / 1000;
+  const Vc_c    = 0.33                                * sqrtFc * bo * d / 1000;
+  const Vc_p    = Math.min(Vc_a, Vc_b, Vc_c);
+  const PhiVc   = PHI_SHEAR * Vc_p;
+
+  // Track which equation governed for output
+  const Vc_govn = Vc_p === Vc_a ? "(a) 2+4/βc"
+                : Vc_p === Vc_b ? "(b) αs·d/bo"
+                :                 "(c) 0.33√fc'";
 
   // ==========================================================================
   // MOMENT COEFFICIENTS — User input or loaded from ACI Table 8.10.3.1
@@ -513,12 +574,18 @@ function _twoWay(fc, fy, h, db, d, wu) {
   html += `<div class="modern-section">
     <div class="modern-section-divider">
       <span class="section-divider-title">Punching Shear</span>
-      <span class="section-divider-code">ACI 318-14 §22.6</span>
+      <span class="section-divider-code">ACI 318-14 §22.6.5.2</span>
     </div>
     <div class="modern-results-grid">`;
-  html += createRow("Critical Perimeter (b<sub>o</sub>)", bo.toFixed(0) + " mm", "");
+  html += createRow("Column Dimensions",                    `${col_w} × ${col_h} mm`,   "");
+  html += createRow("β<sub>c</sub> (long/short)",           beta_c.toFixed(3),           "");
+  html += createRow("Critical Perimeter (b<sub>o</sub>)",   bo.toFixed(0)      + " mm",  "");
+  html += createRow("Eq. (a) V<sub>c</sub>",                Vc_a.toFixed(1)    + " kN",  "");
+  html += createRow("Eq. (b) V<sub>c</sub> (α<sub>s</sub>=40 interior)", Vc_b.toFixed(1) + " kN", "");
+  html += createRow("Eq. (c) V<sub>c</sub>",                Vc_c.toFixed(1)    + " kN",  "");
+  html += createRow("Governing Equation",                   Vc_govn,                      "");
   html += createProgressBar("V<sub>u</sub> vs φV<sub>c</sub> (Punching)", Vu_p, PhiVc, "kN");
-  html += createRow("φV<sub>c</sub> Capacity", PhiVc.toFixed(1) + " kN", PhiVc >= Vu_p ? "SAFE" : "FAIL");
+  html += createRow("φV<sub>c</sub> Capacity",              PhiVc.toFixed(1)   + " kN",  PhiVc >= Vu_p ? "SAFE" : "FAIL");
   html += `</div></div>`;
 
   html += `<div class="modern-section">

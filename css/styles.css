@@ -1040,100 +1040,7 @@ canvas {
    9. PRINT STYLES
    ============================================================================ */
 
-@media print {
-  /* 1. Reset backgrounds to pure white for ink economy */
-  body, .main-content, .content-area, .results-card, .modern-section {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
 
-  /* 2. Hide all input/interactive UI elements */
-  .sidebar,
-  .btn-reset,
-  .btn-primary,
-  .btn-print-modern,
-  .preset-group,
-  .section-card,
-  .unit-toggle-container {
-    display: none !important;
-  }
-
-  /* 3. Transform the Topbar into a Formal Document Header */
-  .topbar {
-    display: flex !important;
-    position: static !important;
-    border-bottom: 2px solid #0f172a !important;
-    padding: 0 0 1rem 0 !important;
-    margin-bottom: 2rem !important;
-    box-shadow: none !important;
-    justify-content: space-between !important;
-  }
-
-  .project-info {
-    display: block !important;
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    text-align: right !important;
-  }
-
-  .project-info-row {
-    justify-content: flex-end !important;
-    font-size: 10pt !important;
-    color: #000 !important;
-  }
-
-  .project-info-label {
-    color: #475569 !important;
-  }
-
-  /* 4. Force Results to consume the full page canvas */
-  .content-area {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-  }
-
-  .results-card {
-    display: block !important;
-    box-shadow: none !important;
-    border: none !important;
-    margin: 0 !important;
-  }
-
-  /* 5. Pagination Control: Prevent awkward page breaks inside critical elements */
-  .modern-section {
-    page-break-inside: avoid;
-    break-inside: avoid;
-    border: 1px solid #cbd5e1 !important;
-    margin-bottom: 1.5rem !important;
-  }
-
-  .modern-chart-card, .modern-charts-row {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* 6. High Contrast Headers for B&W Printers */
-  .modern-result-header {
-    background: #f8fafc !important;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .modern-result-title *, .modern-result-subtitle {
-    color: #0f172a !important;
-  }
-
-  /* 7. Tags border enforcement for grayscale readability */
-  .tag {
-    border: 1px solid #64748b !important;
-    color: #0f172a !important;
-    background: transparent !important;
-  }
-}
 /* =============================================================================
    MODERN RESULT STYLES
    ============================================================================= */
@@ -1429,30 +1336,7 @@ canvas {
   font-size: 0.875rem;
 }
 
-/* Print Styles for Modern Results */
-@media print {
-  .modern-result-header {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .btn-print-modern {
-    display: none;
-  }
-  
-  .modern-section-divider {
-    border-left-color: #0ea5e9;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .modern-results-grid .result-row:nth-child(even) {
-    background: #f9fafb;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-}
+
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -1483,3 +1367,692 @@ canvas {
     padding: 1rem;
   }
 }
+
+/* =============================================================================
+   PRINT TITLE BLOCK & FOOTER — Screen: hidden  |  Print: visible
+   ============================================================================= */
+
+.print-title-block,
+.print-footer-block,
+.print-signature-block {
+  display: none;
+}
+
+/* =============================================================================
+   PROFESSIONAL PRINT STYLESHEET
+   Engineering Computation Sheet — A4 / Letter
+   ============================================================================= */
+
+@media print {
+
+  /* ------------------------------------------------------------------
+     1. PAGE SETUP
+     ------------------------------------------------------------------ */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 22mm 16mm;
+
+    @bottom-center {
+      content: "STRUCTURAL DESIGN COMPUTATION SHEET — NSCP 2015 / ACI 318-14";
+      font-family: "IBM Plex Sans", Arial, sans-serif;
+      font-size: 7pt;
+      color: #6b7280;
+      border-top: 0.5pt solid #d1d5db;
+      padding-top: 4pt;
+    }
+  }
+
+  @page :first {
+    margin-top: 14mm;
+  }
+
+  /* ------------------------------------------------------------------
+     2. BASE RESET
+     ------------------------------------------------------------------ */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  html, body {
+    font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    background: #ffffff;
+  }
+
+  /* ------------------------------------------------------------------
+     3. HIDE ALL INTERACTIVE / SCREEN-ONLY ELEMENTS
+     ------------------------------------------------------------------ */
+  .sidebar,
+  .topbar,
+  .module-header,
+  .section-card,
+  .btn,
+  .btn-primary,
+  .btn-reset,
+  .btn-print-modern,
+  .preset-group,
+  .unit-toggle-container,
+  .nav-item,
+  .field-hint,
+  .field-error,
+  .input-grid,
+  .form-group,
+  .form-label,
+  .form-input,
+  .form-select,
+  .sidebar-footer,
+  .sidebar-header,
+  .sidebar-nav {
+    display: none !important;
+  }
+
+  /* ------------------------------------------------------------------
+     4. LAYOUT — Full-width single column
+     ------------------------------------------------------------------ */
+  .dashboard-container {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .main-content {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .content-area {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+  }
+
+  .module {
+    display: none !important;
+  }
+
+  .module.active {
+    display: block !important;
+  }
+
+  .results-card {
+    display: block !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* ------------------------------------------------------------------
+     5. PRINT TITLE BLOCK
+     ------------------------------------------------------------------ */
+  .print-title-block {
+    display: block !important;
+    border: 1.5pt solid #1a1a1a;
+    border-radius: 0;
+    margin-bottom: 14pt;
+    page-break-after: avoid;
+    break-after: avoid;
+    font-family: "IBM Plex Sans", Arial, sans-serif;
+  }
+
+  .ptb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8pt 10pt;
+    background: #1e3a5f;
+    border-bottom: 1pt solid #1a1a1a;
+  }
+
+  .ptb-org-name {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ptb-org-sub {
+    font-size: 7.5pt;
+    color: #93c5fd;
+    margin-top: 2pt;
+    letter-spacing: 0.01em;
+  }
+
+  .ptb-logo-box {
+    width: 30pt;
+    height: 30pt;
+    background: #ffffff;
+    color: #1e3a5f;
+    font-size: 16pt;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4pt;
+    flex-shrink: 0;
+  }
+
+  .ptb-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 0.5pt solid #d1d5db;
+  }
+
+  .ptb-meta-row {
+    display: flex;
+    padding: 4pt 10pt;
+    border-bottom: 0.5pt solid #e5e7eb;
+    border-right: 0.5pt solid #e5e7eb;
+    align-items: baseline;
+    gap: 6pt;
+  }
+
+  .ptb-meta-row:nth-child(even) {
+    border-right: none;
+  }
+
+  .ptb-meta-label {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 80pt;
+    flex-shrink: 0;
+  }
+
+  .ptb-meta-value {
+    font-size: 9pt;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .ptb-disclaimer {
+    padding: 5pt 10pt;
+    font-size: 7pt;
+    color: #6b7280;
+    line-height: 1.4;
+    background: #f9fafb;
+    font-style: italic;
+    border-top: 0.5pt solid #e5e7eb;
+  }
+
+  /* ------------------------------------------------------------------
+     6. RESULT DOCUMENT HEADER  (replaces gradient banner)
+     ------------------------------------------------------------------ */
+  .modern-result-header {
+    background: #1e3a5f !important;
+    color: #ffffff !important;
+    padding: 8pt 12pt !important;
+    border-radius: 0 !important;
+    border: 1pt solid #1a1a1a !important;
+    border-bottom: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .modern-result-main-title {
+    font-size: 11pt !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.02em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 1pt !important;
+  }
+
+  .modern-result-subtitle {
+    font-size: 8pt !important;
+    color: #93c5fd !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+  }
+
+  .btn-print-modern {
+    display: none !important;
+  }
+
+  /* ------------------------------------------------------------------
+     7. RESULT BODY
+     ------------------------------------------------------------------ */
+  .modern-result-body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    gap: 0 !important;
+    border: 1pt solid #1a1a1a !important;
+    border-top: none !important;
+  }
+
+  /* ------------------------------------------------------------------
+     8. SECTIONS
+     ------------------------------------------------------------------ */
+  .modern-section {
+    background: #ffffff !important;
+    border: none !important;
+    border-top: 0.5pt solid #d1d5db !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+  }
+
+  .modern-section:first-child {
+    border-top: none !important;
+  }
+
+  /* Section divider bar */
+  .modern-section-divider {
+    background: #f3f4f6 !important;
+    border-left: 3pt solid #1e3a5f !important;
+    border-bottom: 0.5pt solid #d1d5db !important;
+    padding: 4pt 10pt !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8pt !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .section-divider-title {
+    font-size: 8.5pt !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+    flex-grow: 1 !important;
+  }
+
+  .section-divider-code {
+    font-family: "IBM Plex Mono", "Courier New", monospace !important;
+    font-size: 7pt !important;
+    color: #374151 !important;
+    background: #e5e7eb !important;
+    padding: 1.5pt 5pt !important;
+    border-radius: 2pt !important;
+    font-weight: 600 !important;
+    border: 0.5pt solid #d1d5db !important;
+  }
+
+  /* ------------------------------------------------------------------
+     9. RESULT ROWS
+     ------------------------------------------------------------------ */
+  .modern-results-grid {
+    padding: 0 !important;
+    gap: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .modern-results-grid .result-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 3.5pt 10pt !important;
+    border-bottom: 0.3pt solid #e5e7eb !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .modern-results-grid .result-row:nth-child(even) {
+    background: #f9fafb !important;
+  }
+
+  .modern-results-grid .result-row:last-child {
+    border-bottom: none !important;
+  }
+
+  .result-label {
+    font-size: 8.5pt !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    flex: 1 !important;
+  }
+
+  .result-value {
+    font-size: 8.5pt !important;
+    color: #111827 !important;
+    font-weight: 600 !important;
+    font-family: "IBM Plex Mono", "Courier New", monospace !important;
+    text-align: right !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6pt !important;
+  }
+
+  /* ------------------------------------------------------------------
+     10. STATUS TAGS — Border-only for B&W printing
+     ------------------------------------------------------------------ */
+  .tag {
+    font-size: 6.5pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 1pt 4pt !important;
+    border-radius: 2pt !important;
+    border: 0.75pt solid !important;
+    display: inline-block !important;
+  }
+
+  .tag.pass {
+    color: #14532d !important;
+    background: #dcfce7 !important;
+    border-color: #15803d !important;
+  }
+
+  .tag.fail {
+    color: #7f1d1d !important;
+    background: #fee2e2 !important;
+    border-color: #b91c1c !important;
+  }
+
+  .tag.warn {
+    color: #78350f !important;
+    background: #fef3c7 !important;
+    border-color: #b45309 !important;
+  }
+
+  .tag.info {
+    color: #1e3a5f !important;
+    background: #eff6ff !important;
+    border-color: #1d4ed8 !important;
+  }
+
+  /* ------------------------------------------------------------------
+     11. PROGRESS BARS
+     ------------------------------------------------------------------ */
+  .modern-results-grid .progress-row {
+    background: #f9fafb !important;
+    border: 0.5pt solid #d1d5db !important;
+    border-radius: 0 !important;
+    padding: 4pt 10pt !important;
+    margin: 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .progress-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2pt !important;
+    min-width: 140pt !important;
+  }
+
+  .progress-bar-bg {
+    height: 6pt !important;
+    background: #e5e7eb !important;
+    border-radius: 3pt !important;
+    overflow: hidden !important;
+    border: 0.3pt solid #d1d5db !important;
+  }
+
+  .progress-bar-fill {
+    height: 100% !important;
+    border-radius: 3pt !important;
+  }
+
+  .progress-label {
+    font-size: 7.5pt !important;
+    font-family: "IBM Plex Mono", "Courier New", monospace !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+  }
+
+  .progress-label.over {
+    color: #b91c1c !important;
+    font-weight: 700 !important;
+  }
+
+  /* ------------------------------------------------------------------
+     12. CHART CARDS
+     ------------------------------------------------------------------ */
+  .modern-chart-card {
+    border: 0.5pt solid #d1d5db !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 8pt !important;
+  }
+
+  .modern-charts-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8pt !important;
+    margin-bottom: 8pt !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .modern-chart-header {
+    background: #f3f4f6 !important;
+    border-bottom: 0.5pt solid #d1d5db !important;
+    padding: 4pt 8pt !important;
+  }
+
+  .chart-header-title {
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #374151 !important;
+  }
+
+  .modern-chart-content {
+    padding: 8pt !important;
+    background: #ffffff !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .modern-chart-legend {
+    padding: 4pt 8pt !important;
+    border-top: 0.3pt solid #e5e7eb !important;
+    background: #f9fafb !important;
+    display: flex !important;
+    gap: 12pt !important;
+    flex-wrap: wrap !important;
+  }
+
+  .legend-item {
+    font-size: 7pt !important;
+    color: #374151 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4pt !important;
+  }
+
+  .legend-dot {
+    width: 7pt !important;
+    height: 7pt !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ------------------------------------------------------------------
+     13. REBAR SCHEDULE TABLE
+     ------------------------------------------------------------------ */
+  .table-wrapper {
+    overflow: visible !important;
+    border: none !important;
+  }
+
+  .rebar-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8pt !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 0.75pt solid #d1d5db !important;
+  }
+
+  .rebar-table thead {
+    background: #1e3a5f !important;
+  }
+
+  .rebar-table thead th {
+    color: #ffffff !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 4pt 8pt !important;
+    border: 0.5pt solid #1e3a5f !important;
+    text-align: left !important;
+  }
+
+  .rebar-table tbody tr {
+    border-bottom: 0.3pt solid #d1d5db !important;
+  }
+
+  .rebar-table tbody tr:nth-child(even) {
+    background: #f9fafb !important;
+  }
+
+  .rebar-table tbody td {
+    padding: 3.5pt 8pt !important;
+    font-size: 8pt !important;
+    color: #111827 !important;
+    border: 0.3pt solid #e5e7eb !important;
+    font-family: "IBM Plex Mono", "Courier New", monospace !important;
+  }
+
+  /* ------------------------------------------------------------------
+     14. TORSION DIVIDER (legacy .section-divider)
+     ------------------------------------------------------------------ */
+  .section-divider {
+    font-size: 8pt !important;
+    font-weight: 700 !important;
+    color: #1e3a5f !important;
+    padding: 4pt 10pt !important;
+    border-left: 3pt solid #1e3a5f !important;
+    background: #f3f4f6 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    border-bottom: 0.5pt solid #d1d5db !important;
+  }
+
+  /* ------------------------------------------------------------------
+     15. PRINT FOOTER BLOCK
+     ------------------------------------------------------------------ */
+  .print-footer-block {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 4pt 16mm !important;
+    border-top: 0.75pt solid #d1d5db !important;
+    background: #ffffff !important;
+    font-size: 7pt !important;
+    color: #6b7280 !important;
+    font-family: "IBM Plex Sans", Arial, sans-serif !important;
+  }
+
+  .pfb-left  { text-align: left;   flex: 1; }
+  .pfb-center { text-align: center; flex: 1; font-weight: 600; color: #374151; }
+  .pfb-right { text-align: right;  flex: 1; }
+
+  /* ------------------------------------------------------------------
+     16. PAGE BREAK RULES
+     ------------------------------------------------------------------ */
+  .modern-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .modern-result-header {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .rebar-table,
+  .modern-chart-card,
+  .modern-charts-row,
+  .print-title-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Force a page break before the result body if title block pushes it */
+  .modern-result-body {
+    page-break-before: avoid;
+    break-before: avoid;
+  }
+
+  /* ------------------------------------------------------------------
+     17. ENGINEER SIGNATURE BLOCK
+     ------------------------------------------------------------------ */
+  .print-signature-block {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 0 !important;
+    border: 1pt solid #1a1a1a !important;
+    margin-top: 16pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    font-family: "IBM Plex Sans", Arial, sans-serif !important;
+  }
+
+  .psb-cell {
+    padding: 6pt 10pt 18pt !important;
+    border-right: 0.5pt solid #d1d5db !important;
+  }
+
+  .psb-cell:last-child {
+    border-right: none !important;
+  }
+
+  .psb-label {
+    font-size: 7pt !important;
+    font-weight: 700 !important;
+    color: #6b7280 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 12pt !important;
+    display: block !important;
+  }
+
+  .psb-line {
+    border-top: 0.75pt solid #1a1a1a !important;
+    margin-top: 14pt !important;
+    padding-top: 3pt !important;
+    font-size: 7pt !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+  }
+
+  /* ------------------------------------------------------------------
+     18. PAGE COUNTER (CSS counter — fallback for browsers not supporting @page)
+     ------------------------------------------------------------------ */
+  body {
+    counter-reset: page-num;
+  }
+
+  .print-footer-block::after {
+    content: " " counter(page-num);
+    counter-increment: page-num;
+  }
+
+}
+/* END @media print */
